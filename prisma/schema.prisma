@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  role         Role           @default(EMPLOYEE)
+  passwordHash String
+  isActive     Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  RefreshToken RefreshToken[]
+  CustomerOrders Order[]      @relation("CustomerOrders")
+  EmployeeOrders Order[]      @relation("EmployeeOrders")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+  ADMIN
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  userId      String
+  hashedToken String
+  expiresAt   DateTime
+  revoked     Boolean  @default(false)
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  isActive    Boolean    @default(true)
+  MenuItems   MenuItem[]
+}
+
+model MenuItem {
+  id              String         @id @default(uuid())
+  categoryId      String
+  name            String
+  description     String?
+  imageUrl        String?
+  price           Float
+  isAvailable     Boolean        @default(true)
+  isVeg           Boolean        @default(true)
+  preparationTime Int?           // in minutes
+  category        Category       @relation(fields: [categoryId], references: [id])
+  OrderItems      OrderItem[]
+  RecipeBOM       RecipeBOM[]
+}
+
+model RestaurantTable {
+  id       String      @id @default(uuid())
+  name     String
+  capacity Int
+  status   TableStatus @default(FREE)
+  Orders   Order[]
+}
+
+enum TableStatus {
+  FREE
+  OCCUPIED
+  RESERVED
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  tableId       String?
+  userId        String?
+  employeeId    String?
+  status        OrderStatus   @default(PENDING)
+  orderType     OrderType     @default(DINEIN)
+  totalAmount   Float         @default(0)
+  paymentStatus PaymentStatus @default(UNPAID)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  table         RestaurantTable? @relation(fields: [tableId], references: [id])
+  user          User?            @relation(name: "CustomerOrders", fields: [userId], references: [id])
+  employee      User?            @relation(name: "EmployeeOrders", fields: [employeeId], references: [id])
+  OrderItems    OrderItem[]
+  Payments      Payment[]
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum OrderType {
+  DINEIN
+  TAKEAWAY
+  DELIVERY
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  PARTIAL
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  menuItemId String
+  quantity   Int
+  unitPrice  Float
+  modifiers  String?  // Stored as JSON string
+
+  order      Order    @relation(fields: [orderId], references: [id])
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+}
+
+model Payment {
+  id             String        @id @default(uuid())
+  orderId        String
+  amount         Float
+  method         PaymentMethod
+  transactionRef String?
+  status         PaymentStatus @default(PAID)
+  paidAt         DateTime      @default(now())
+
+  order          Order         @relation(fields: [orderId], references: [id])
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  UPI
+}
+
+model Ingredient {
+  id             String          @id @default(uuid())
+  name           String
+  stockQty       Float           @default(0)
+  unit           UnitType
+  reorderLevel   Float           @default(0)
+  costPrice      Float           @default(0)
+  RecipeBOM      RecipeBOM[]
+  StockMovements StockMovement[]
+}
+
+enum UnitType {
+  KG
+  LTR
+  PCS
+}
+
+model RecipeBOM {
+  id               String     @id @default(uuid())
+  menuItemId       String
+  ingredientId     String
+  quantityRequired Float
+
+  menuItem         MenuItem   @relation(fields: [menuItemId], references: [id])
+  ingredient       Ingredient @relation(fields: [ingredientId], references: [id])
+}
+
+model StockMovement {
+  id           String         @id @default(uuid())
+  ingredientId String
+  changeQty    Float
+  reason       MovementReason
+  referenceId  String?
+  createdAt    DateTime       @default(now())
+
+  ingredient   Ingredient     @relation(fields: [ingredientId], references: [id])
+}
+
+enum MovementReason {
+  PURCHASE
+  SALE
+  ADJUSTMENT
+}
