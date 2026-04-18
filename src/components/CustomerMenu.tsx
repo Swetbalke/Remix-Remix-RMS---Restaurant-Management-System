@@ -165,14 +165,14 @@ export default function CustomerMenu() {
                       addItem(item);
                       toast.success(`${item.name} added to cart!`);
                     }}
-                    disabled={!item.available}
+                    disabled={!item.isAvailable}
                     className={`flex-1 py-7 rounded-2xl font-black text-base transition-all shadow-xl ${
-                      item.available 
+                      item.isAvailable 
                         ? 'bg-gray-900 hover:bg-black text-white shadow-gray-200' 
                         : 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
                     }`}
                   >
-                    {item.available ? 'Add to Basket' : 'Out of Stock'}
+                    {item.isAvailable ? 'Add to Basket' : 'Out of Stock'}
                   </Button>
                 )}
               </div>

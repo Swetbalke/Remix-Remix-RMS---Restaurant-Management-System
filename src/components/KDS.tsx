@@ -61,11 +61,15 @@ export default function KDS() {
 
   const updateStatus = async (orderId: string, status: OrderStatus) => {
     try {
-      await fetch(`/api/orders/${orderId}`, {
+      const res = await fetch(`/api/orders/${orderId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
+      if (res.ok) {
+        const updatedOrder = await res.json();
+        setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
+      }
     } catch (err) {
       console.error('Failed to update order', err);
     }
@@ -101,7 +105,7 @@ export default function KDS() {
           <FilterButton active={filter === 'all'} onClick={() => setFilter('all')} label="All" count={orders.length} />
           <FilterButton active={filter === 'pending'} onClick={() => setFilter('pending')} label="New" count={orders.filter(o => o.status === 'pending').length} color="blue" />
           <FilterButton active={filter === 'preparing'} onClick={() => setFilter('preparing')} label="Cooking" count={orders.filter(o => o.status === 'preparing').length} color="orange" />
-          <FilterButton active={filter === 'served'} onClick={() => setFilter('served')} label="Ready" count={orders.filter(o => o.status === 'served').length} color="green" />
+          <FilterButton active={filter === 'completed'} onClick={() => setFilter('completed')} label="Ready" count={orders.filter(o => o.status === 'completed' || o.status === 'served').length} color="green" />
         </div>
       </div>
 
@@ -192,13 +196,13 @@ function OrderCard({ order, onUpdateStatus }: { order: Order, onUpdateStatus: (i
         )}
         {order.status === 'preparing' && (
           <Button 
-            onClick={() => onUpdateStatus(order.id, 'served')}
+            onClick={() => onUpdateStatus(order.id, 'completed')}
             className="w-full py-8 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-orange-100"
           >
             Mark Ready
           </Button>
         )}
-        {order.status === 'served' && (
+        {(order.status === 'served' || order.status === 'completed') && (
           <Button 
             onClick={() => onUpdateStatus(order.id, 'paid')}
             className="w-full py-8 bg-gray-900 hover:bg-black text-white rounded-2xl font-black text-lg shadow-xl shadow-gray-200"

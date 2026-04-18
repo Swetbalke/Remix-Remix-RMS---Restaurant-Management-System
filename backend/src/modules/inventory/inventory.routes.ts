@@ -20,4 +20,16 @@ router.get('/', asyncHandler(async (req: any, res: any) => {
   res.json(formatted);
 }));
 
+router.patch('/:id', asyncHandler(async (req: any, res: any) => {
+  const { available } = req.body;
+  if (available !== undefined) {
+    const item = await prisma.menuItem.update({
+      where: { id: req.params.id },
+      data: { isAvailable: available }
+    });
+    return res.json(item);
+  }
+  res.status(200).json({ success: true });
+}));
+
 export const inventoryRouter = router;

@@ -16,7 +16,8 @@ import {
   Check,
   X,
   Send,
-  Clock
+  Clock,
+  UtensilsCrossed
 } from 'lucide-react';
 import { 
   XAxis, 
@@ -29,15 +30,18 @@ import {
 } from 'recharts';
 import { aiService } from '../services/aiService';
 
-type AdminTab = 'analytics' | 'menu' | 'inventory' | 'staff' | 'ai';
+type AdminTab = 'analytics' | 'orders' | 'menu' | 'inventory' | 'staff' | 'ai';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<AdminTab>('analytics');
   const [analytics, setAnalytics] = useState<any>(null);
   const [insights, setInsights] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
+  // Store orders for the orders tab
+  const [allOrders, setAllOrders] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
   
@@ -60,6 +64,9 @@ export default function AdminDashboard() {
       if (activeTab === 'analytics') {
         const res = await fetch('/api/analytics');
         setAnalytics(await res.json());
+      } else if (activeTab === 'orders') {
+        const res = await fetch('/api/orders');
+        setAllOrders(await res.json());
       } else if (activeTab === 'inventory') {
         const res = await fetch('/api/inventory');
         setInventory(await res.json());
@@ -69,7 +76,7 @@ export default function AdminDashboard() {
           fetch('/api/categories')
         ]);
         setMenuItems(await menuRes.json());
-        // For simplicity, categories wait or assume we fetch them here or when we add items
+        setCategories(await categoriesRes.json());
       } else if (activeTab === 'staff') {
         const res = await fetch('/api/staff');
         setStaff(await res.json());
@@ -180,7 +187,7 @@ export default function AdminDashboard() {
         <div>
           <h2 className="text-4xl font-black text-gray-900 tracking-tight">Management Console</h2>
           <div className="flex gap-4 mt-4">
-            {(['analytics', 'menu', 'inventory', 'staff', 'ai'] as AdminTab[]).map(tab => (
+            {(['analytics', 'orders', 'menu', 'inventory', 'staff', 'ai'] as AdminTab[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -213,7 +220,14 @@ export default function AdminDashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard title="Total Revenue" value={`₹${analytics.revenue}`} trend="+12.5%" icon={<DollarSign />} color="orange" />
-              <StatCard title="Total Orders" value={analytics.totalOrders.toString()} trend="+8.2%" icon={<ShoppingBag />} color="blue" />
+              <StatCard 
+                 title="Total Orders" 
+                 value={analytics.totalOrders.toString()} 
+                 trend="+8.2%" 
+                 icon={<ShoppingBag />} 
+                 color="blue" 
+                 onClick={() => setActiveTab('orders')}
+              />
               <StatCard title="Active Orders" value={analytics.activeOrders.toString()} trend="Live" icon={<TrendingUp />} color="green" />
               <StatCard title="Avg Order Value" value={`₹${(analytics.revenue / (analytics.totalOrders || 1)).toFixed(0)}`} trend="+5.1%" icon={<Users />} color="purple" />
             </div>
@@ -328,6 +342,60 @@ export default function AdminDashboard() {
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'orders' && (
+          <motion.div
+            key="orders"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-6"
+          >
+            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-8 border-b border-gray-100">
+                <h3 className="text-xl font-black text-gray-900">Order Management</h3>
+                <p className="text-sm font-bold text-gray-500 mt-1">View and handle customer payments & overall orders.</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50/50 text-gray-400 font-black text-xs uppercase tracking-widest">
+                    <tr>
+                      <th className="p-6">Order ID</th>
+                      <th className="p-6">Total Amount</th>
+                      <th className="p-6">Status</th>
+                      <th className="p-6">Payment</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                     {allOrders.length === 0 ? (
+                       <tr><td colSpan={4} className="p-8 text-center text-gray-400 font-bold">No orders found.</td></tr>
+                     ) : (
+                       allOrders.map((o: any) => (
+                         <tr key={o.id} className="hover:bg-gray-50/50 transition-colors">
+                           <td className="p-6">
+                             <p className="font-bold text-gray-900">#{o.id.slice(-6)}</p>
+                             <p className="text-xs text-gray-400 font-bold">{new Date(o.createdAt).toLocaleString()}</p>
+                           </td>
+                           <td className="p-6 font-black text-orange-600">₹{o.totalAmount}</td>
+                           <td className="p-6">
+                             <Badge variant="outline" className={`font-black uppercase tracking-widest ${o.status === 'completed' ? 'border-green-200 text-green-600 bg-green-50' : 'border-blue-200 text-blue-600 bg-blue-50'}`}>
+                               {o.status}
+                             </Badge>
+                           </td>
+                           <td className="p-6">
+                             <Badge variant="outline" className={`font-black uppercase tracking-widest ${o.paymentStatus === 'paid' ? 'border-green-200 text-green-600 bg-green-50' : 'border-red-200 text-red-600 bg-red-50'}`}>
+                               {o.paymentStatus}
+                             </Badge>
+                           </td>
+                         </tr>
+                       ))
+                     )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </motion.div>
@@ -449,8 +517,8 @@ export default function AdminDashboard() {
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 block">Role</label>
                   <select name="role" className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500">
-                    <option value="staff">Kitchen Staff</option>
-                    <option value="admin">Manager/Admin</option>
+                    <option value="EMPLOYEE">Kitchen Staff</option>
+                    <option value="ADMIN">Manager/Admin</option>
                   </select>
                 </div>
                 <button type="submit" className="w-full py-4 bg-orange-500 text-white rounded-xl font-black shadow-lg shadow-orange-100 hover:bg-orange-600 transition-all">
@@ -582,6 +650,15 @@ export default function AdminDashboard() {
                   <textarea value={dishState.description} onChange={(e) => setDishState({...dishState, description: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500 h-24 resize-none" />
                 </div>
                 <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 block">Category</label>
+                  <select required value={dishState.categoryId} onChange={(e) => setDishState({...dishState, categoryId: e.target.value})} className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500">
+                    <option value="">Select Category...</option>
+                    {categories.map((cat: any) => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 block">Image URL</label>
                   <input value={dishState.imageUrl} onChange={(e) => setDishState({...dishState, imageUrl: e.target.value})} placeholder="https://..." className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500" />
                 </div>
@@ -596,7 +673,7 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ title, value, trend, icon, color }: { title: string, value: string, trend: string, icon: React.ReactNode, color: string }) {
+function StatCard({ title, value, trend, icon, color, onClick }: { title: string, value: string, trend: string, icon: React.ReactNode, color: string, onClick?: () => void }) {
   const colors: any = {
     orange: 'bg-orange-50 text-orange-600',
     blue: 'bg-blue-50 text-blue-600',
@@ -605,7 +682,10 @@ function StatCard({ title, value, trend, icon, color }: { title: string, value: 
   };
 
   return (
-    <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+    <div 
+      onClick={onClick}
+      className={`bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all group ${onClick ? 'cursor-pointer hover:border-orange-200' : ''}`}
+    >
       <div className="flex justify-between items-start mb-6">
         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${colors[color]} transition-transform group-hover:scale-110`}>
           {React.cloneElement(icon as React.ReactElement, { size: 28 } as any)}

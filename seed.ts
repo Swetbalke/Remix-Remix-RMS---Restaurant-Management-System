@@ -1,24 +1,33 @@
-import mongoose from 'mongoose';
-import { MenuItem } from './server/models.ts';
-import { connectDB } from './server/db.ts';
-import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
-dotenv.config();
+const prisma = new PrismaClient();
 
-const seedData = [
-  { name: 'Truffle Mushroom Risotto', description: 'Creamy Arborio rice with black truffle oil and wild mushrooms.', price: 850, category: 'main', image: 'https://picsum.photos/seed/risotto/800/600', available: true, stock: 50 },
-  { name: 'Avocado Toast Deluxe', description: 'Sourdough bread with smashed avocado, poached eggs, and chili flakes.', price: 450, category: 'starter', image: 'https://picsum.photos/seed/avocado/800/600', available: true, stock: 100 },
-  { name: 'Saffron Infused Salmon', description: 'Pan-seared salmon with saffron butter sauce and asparagus.', price: 1200, category: 'main', image: 'https://picsum.photos/seed/salmon/800/600', available: true, stock: 30 },
-  { name: 'Belgian Chocolate Lava Cake', description: 'Warm chocolate cake with a molten center and vanilla bean gelato.', price: 350, category: 'dessert', image: 'https://picsum.photos/seed/cake/800/600', available: true, stock: 40 },
-  { name: 'Artisanal Cold Brew', description: '12-hour slow-steeped coffee served over clear ice.', price: 280, category: 'beverage', image: 'https://picsum.photos/seed/coffee/800/600', available: true, stock: 200 },
-];
+async function main() {
+  await prisma.user.deleteMany({});
+  await prisma.menuItem.deleteMany({});
+  await prisma.category.deleteMany({});
+  await prisma.restaurantTable.deleteMany({});
 
-async function seed() {
-  await connectDB();
-  await MenuItem.deleteMany({});
-  await MenuItem.insertMany(seedData);
-  console.log('Database Seeded Successfully');
-  process.exit();
+  const passwordHash = await bcrypt.hash('admin123', 10);
+  await prisma.user.create({
+    data: { name: 'Super Admin', email: 'swetbalke2005@gmail.com', role: 'ADMIN', passwordHash }
+  });
+
+  const catStarter = await prisma.category.create({ data: { name: 'Starter' } });
+  const catMain = await prisma.category.create({ data: { name: 'Main' } });
+  const catDessert = await prisma.category.create({ data: { name: 'Dessert' } });
+  const catBeverage = await prisma.category.create({ data: { name: 'Beverage' } });
+
+  await prisma.menuItem.create({ data: { name: 'Truffle Mushroom Risotto', description: 'Creamy Arborio rice with black truffle oil and wild mushrooms.', price: 850, categoryId: catMain.id, imageUrl: 'https://picsum.photos/seed/risotto/800/600' }});
+  await prisma.menuItem.create({ data: { name: 'Avocado Toast Deluxe', description: 'Sourdough bread with smashed avocado.', price: 450, categoryId: catStarter.id, imageUrl: 'https://picsum.photos/seed/avocado/800/600' }});
+  await prisma.menuItem.create({ data: { name: 'Saffron Infused Salmon', description: 'Pan-seared salmon with saffron butter sauce.', price: 1200, categoryId: catMain.id, imageUrl: 'https://picsum.photos/seed/salmon/800/600' }});
+
+  for (let i = 1; i <= 6; i++) {
+    await prisma.restaurantTable.create({ data: { id: String(i), name: `Table ${i}`, capacity: 4 } });
+  }
+
+  console.log('Seeded successfully with Prisma!');
 }
 
-seed();
+main().catch(console.error).finally(() => prisma.$disconnect());
