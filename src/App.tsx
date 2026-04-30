@@ -71,7 +71,8 @@ export default function App() {
       
       const contentType = res.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") === -1) {
-        throw new Error("Server did not return JSON. If you are on Vercel, the backend API is not running. Please use the Render URL.");
+        const text = await res.text();
+        throw new Error("Server API is not running correctly. Ensure your backend is deployed (e.g. on Render as a Web Service). Server said: " + text.substring(0, 50));
       }
 
       const data = await res.json();
