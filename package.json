@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "npx prisma generate && vite build",
+    "clean-db": "node -e \"try{require('fs').unlinkSync('prisma/dev.db'); require('fs').unlinkSync('prisma/dev.db-journal');}catch(e){}\"",
+    "build": "npm run clean-db && npx prisma generate && vite build",
     "start": "npx prisma db push --accept-data-loss && npx tsx seed.ts && npx tsx server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
