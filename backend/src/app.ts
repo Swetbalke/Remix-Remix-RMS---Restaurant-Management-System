@@ -25,8 +25,8 @@ app.use('/analytics', reportsRouter);
 
 // Error handler middleware
 app.use((err: any, req: any, res: any, next: any) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
+  console.error("API Error caught:", err);
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
 export const apiRouter = app;

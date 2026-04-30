@@ -58,24 +58,35 @@ export default function App() {
   }, []);
 
   const authenticateWithBackend = async (firebaseUser: any, nameStr: string) => {
-    const res = await fetch('/api/auth/firebase', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        email: firebaseUser.email, 
-        name: firebaseUser.displayName || nameStr || 'User',
-        uid: firebaseUser.uid 
-      })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setUser(data.user);
-      setShowLogin(false);
-      if (data.user.role === 'ADMIN' || data.user.role === 'MANAGER') navigate('admin');
-      else if (data.user.role === 'EMPLOYEE') navigate('pos');
-      else navigate('menu');
-    } else {
-      alert(data.error || 'Authentication failed on server');
+    try {
+      const res = await fetch('/api/auth/firebase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: firebaseUser.email, 
+          name: firebaseUser.displayName || nameStr || 'User',
+          uid: firebaseUser.uid 
+        })
+      });
+      
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") === -1) {
+        throw new Error("Server did not return JSON. If you are on Vercel, the backend API is not running. Please use the Render URL.");
+      }
+
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.user);
+        setShowLogin(false);
+        if (data.user.role === 'ADMIN' || data.user.role === 'MANAGER') navigate('admin');
+        else if (data.user.role === 'EMPLOYEE') navigate('pos');
+        else navigate('menu');
+      } else {
+        alert(data.error || 'Authentication failed on server');
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || 'Authentication failed');
     }
   };
 
