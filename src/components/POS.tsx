@@ -40,13 +40,27 @@ export default function POS() {
   }, [activeTab]);
 
   const fetchMenu = async () => {
-    const res = await fetch('/api/menu');
-    setMenu(await res.json());
+    try {
+      const res = await fetch('/api/menu');
+      const data = await res.json();
+      setMenu(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setMenu([]);
+    }
   };
 
   const fetchOrders = async () => {
-    const res = await fetch('/api/orders');
-    if (res.ok) setOrders(await res.json());
+    try {
+      const res = await fetch('/api/orders');
+      if (res.ok) {
+        const data = await res.json();
+        setOrders(Array.isArray(data) ? data : []);
+      }
+    } catch (e) {
+      console.error(e);
+      setOrders([]);
+    }
   };
 
   const addToCart = (item: MenuItem) => {
@@ -106,7 +120,7 @@ export default function POS() {
     }
   };
 
-  const filteredMenu = menu.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
+  const filteredMenu = menu.filter(m => (m.name || '').toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="h-[calc(100vh-120px)] flex flex-col gap-6 overflow-hidden">

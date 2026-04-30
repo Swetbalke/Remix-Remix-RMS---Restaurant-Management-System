@@ -19,9 +19,9 @@ async function main() {
   const catDessert = await prisma.category.create({ data: { name: 'Dessert' } });
   const catBeverage = await prisma.category.create({ data: { name: 'Beverage' } });
 
-  await prisma.menuItem.create({ data: { name: 'Truffle Mushroom Risotto', description: 'Creamy Arborio rice with black truffle oil and wild mushrooms.', price: 850, categoryId: catMain.id, imageUrl: 'https://picsum.photos/seed/risotto/800/600' }});
-  await prisma.menuItem.create({ data: { name: 'Avocado Toast Deluxe', description: 'Sourdough bread with smashed avocado.', price: 450, categoryId: catStarter.id, imageUrl: 'https://picsum.photos/seed/avocado/800/600' }});
-  await prisma.menuItem.create({ data: { name: 'Saffron Infused Salmon', description: 'Pan-seared salmon with saffron butter sauce.', price: 1200, categoryId: catMain.id, imageUrl: 'https://picsum.photos/seed/salmon/800/600' }});
+  await prisma.menuItem.create({ data: { name: 'Truffle Mushroom Risotto', description: 'Creamy Arborio rice with black truffle oil and wild mushrooms.', price: 850, categoryId: catMain.id, imageUrl: 'https://images.unsplash.com/photo-1476124369491-e7addf5db378?w=800&q=80' }});
+  await prisma.menuItem.create({ data: { name: 'Avocado Toast Deluxe', description: 'Sourdough bread with smashed avocado.', price: 450, categoryId: catStarter.id, imageUrl: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=800&q=80' }});
+  await prisma.menuItem.create({ data: { name: 'Saffron Infused Salmon', description: 'Pan-seared salmon with saffron butter sauce.', price: 1200, categoryId: catMain.id, imageUrl: 'https://images.unsplash.com/photo-1481070555726-e2fe8357725c?w=800&q=80' }});
 
   for (let i = 1; i <= 6; i++) {
     await prisma.restaurantTable.create({ data: { id: String(i), name: `Table ${i}`, capacity: 4 } });

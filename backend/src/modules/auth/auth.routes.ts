@@ -36,4 +36,22 @@ router.post('/login', asyncHandler(async (req: any, res: any) => {
   res.json({ accessToken, user: { id: user.id, name: user.name, role: user.role, email: user.email } });
 }));
 
+router.post('/firebase', asyncHandler(async (req: any, res: any) => {
+  const { email, name, uid } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+  
+  let user = await prisma.user.findUnique({ where: { email } });
+  
+  if (!user) {
+    const role = (email === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'EMPLOYEE';
+    const passwordHash = await bcrypt.hash(uid, 10); // Dummy hash using uid
+    user = await prisma.user.create({
+      data: { name: name || 'User', email, role, passwordHash }
+    });
+  }
+
+  const accessToken = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
+  res.json({ accessToken, user: { id: user.id, name: user.name, role: user.role, email: user.email } });
+}));
+
 export const authRouter = router;

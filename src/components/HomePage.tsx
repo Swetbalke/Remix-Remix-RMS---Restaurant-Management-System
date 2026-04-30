@@ -10,7 +10,7 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden rounded-[3rem]">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000" 
+            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=2000" 
             alt="Restaurant Banner" 
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
@@ -85,18 +85,23 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
+          {[
+            { img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80', title: 'Healthy Bowl' },
+            { img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80', title: 'Pizza Margherita' },
+            { img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80', title: 'Classic Burger' },
+            { img: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=500&q=80', title: 'Avocado Toast' }
+          ].map((item, i) => (
             <div key={i} className="group cursor-pointer">
               <div className="relative h-64 rounded-[2rem] overflow-hidden mb-4 shadow-sm group-hover:shadow-xl transition-all">
                 <img 
-                  src={`https://picsum.photos/seed/food${i}/800/600`} 
+                  src={item.img} 
                   alt="Featured Dish" 
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <h3 className="text-xl font-black text-gray-900">Chef's Selection {i}</h3>
+              <h3 className="text-xl font-black text-gray-900">{item.title}</h3>
               <p className="text-gray-500 text-sm font-bold">Starting from ₹299</p>
             </div>
           ))}

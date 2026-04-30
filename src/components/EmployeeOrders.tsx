@@ -19,8 +19,12 @@ export default function EmployeeOrders() {
       // In a real app, this endpoint should just fetch orders assigned to user.id
       const res = await fetch('/api/orders');
       let data = await res.json();
-      data = data.filter((o: any) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
-      setOrders(data);
+      if (Array.isArray(data)) {
+        data = data.filter((o: any) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
+        setOrders(data);
+      } else {
+        setOrders([]);
+      }
     } catch (err) {
       console.error(err);
     }

@@ -39,15 +39,16 @@ export default function CustomerMenu() {
         menuRes.json(),
         catsRes.json()
       ]);
-      setMenu(menuData);
-      setCategories(catsData);
+      setMenu(Array.isArray(menuData) ? menuData : []);
+      setCategories(Array.isArray(catsData) ? catsData : []);
     } catch (err) {
       console.error('Failed to fetch menu', err);
     }
   };
 
-  const filteredMenu = menu.filter((item: any) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredMenu = (Array.isArray(menu) ? menu : []).filter((item: any) => {
+    const name = item.name || '';
+    const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -115,7 +116,7 @@ export default function CustomerMenu() {
             >
               <div className="relative h-56 mb-6 overflow-hidden rounded-[2rem]">
                 <img 
-                  src={item.imageUrl || `https://picsum.photos/seed/${item.name}/400/300`} 
+                  src={item.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80`} 
                   alt={item.name} 
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   referrerPolicy="no-referrer"

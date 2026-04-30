@@ -98,7 +98,7 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
                 className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-6"
               >
                 <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0">
-                  <img src={`https://picsum.photos/seed/${item.menuItemId}/200`} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={`https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80`} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-black text-gray-900">{item.name}</h3>

@@ -29,6 +29,7 @@ import {
   Area
 } from 'recharts';
 import { aiService } from '../services/aiService';
+import { Badge } from '@/components/ui/badge';
 
 type AdminTab = 'analytics' | 'orders' | 'menu' | 'inventory' | 'staff' | 'ai';
 
@@ -63,23 +64,29 @@ export default function AdminDashboard() {
     try {
       if (activeTab === 'analytics') {
         const res = await fetch('/api/analytics');
-        setAnalytics(await res.json());
+        const data = await res.json();
+        setAnalytics(data?.error ? null : data);
       } else if (activeTab === 'orders') {
         const res = await fetch('/api/orders');
-        setAllOrders(await res.json());
+        const data = await res.json();
+        setAllOrders(Array.isArray(data) ? data : []);
       } else if (activeTab === 'inventory') {
         const res = await fetch('/api/inventory');
-        setInventory(await res.json());
+        const data = await res.json();
+        setInventory(Array.isArray(data) ? data : []);
       } else if (activeTab === 'menu') {
         const [menuRes, categoriesRes] = await Promise.all([
           fetch('/api/menu'),
           fetch('/api/categories')
         ]);
-        setMenuItems(await menuRes.json());
-        setCategories(await categoriesRes.json());
+        const mData = await menuRes.json();
+        const cData = await categoriesRes.json();
+        setMenuItems(Array.isArray(mData) ? mData : []);
+        setCategories(Array.isArray(cData) ? cData : []);
       } else if (activeTab === 'staff') {
         const res = await fetch('/api/staff');
-        setStaff(await res.json());
+        const data = await res.json();
+        setStaff(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error('Failed to fetch data', err);
@@ -219,17 +226,17 @@ export default function AdminDashboard() {
           >
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Total Revenue" value={`₹${analytics.revenue}`} trend="+12.5%" icon={<DollarSign />} color="orange" />
+              <StatCard title="Total Revenue" value={`₹${analytics?.revenue || 0}`} trend="+12.5%" icon={<DollarSign />} color="orange" />
               <StatCard 
                  title="Total Orders" 
-                 value={analytics.totalOrders.toString()} 
+                 value={analytics?.totalOrders?.toString() || '0'} 
                  trend="+8.2%" 
                  icon={<ShoppingBag />} 
                  color="blue" 
                  onClick={() => setActiveTab('orders')}
               />
-              <StatCard title="Active Orders" value={analytics.activeOrders.toString()} trend="Live" icon={<TrendingUp />} color="green" />
-              <StatCard title="Avg Order Value" value={`₹${(analytics.revenue / (analytics.totalOrders || 1)).toFixed(0)}`} trend="+5.1%" icon={<Users />} color="purple" />
+              <StatCard title="Active Orders" value={analytics?.activeOrders?.toString() || '0'} trend="Live" icon={<TrendingUp />} color="green" />
+              <StatCard title="Avg Order Value" value={`₹${((analytics?.revenue || 0) / (analytics?.totalOrders || 1)).toFixed(0)}`} trend="+5.1%" icon={<Users />} color="purple" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -308,7 +315,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-orange-500" style={{ width: `${(item.count / analytics.topItems[0].count) * 100}%` }} />
+                          <div className="h-full bg-orange-500" style={{ width: `${(item.count / (analytics.topItems[0]?.count || 1)) * 100}%` }} />
                         </div>
                         <span className="font-black text-gray-900">{item.count}</span>
                       </div>
@@ -424,7 +431,7 @@ export default function AdminDashboard() {
               {menuItems.map(item => (
                 <div key={item.id} className="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all group">
                   <div className="h-48 bg-gray-100 relative">
-                    <img src={item.imageUrl || `https://picsum.photos/seed/${item.name}/400/300`} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <img src={item.imageUrl || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=400&q=80`} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase">
                       ₹{item.price}
                     </div>

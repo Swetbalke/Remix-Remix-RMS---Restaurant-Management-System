@@ -53,7 +53,11 @@ export default function KDS() {
     try {
       const res = await fetch('/api/orders');
       const data = await res.json();
-      setOrders(data.filter((o: Order) => o.status !== 'paid' && o.status !== 'cancelled'));
+      if (Array.isArray(data)) {
+        setOrders(data.filter((o: Order) => o.status !== 'paid' && o.status !== 'cancelled'));
+      } else {
+        setOrders([]);
+      }
     } catch (err) {
       console.error('Failed to fetch orders', err);
     }
