@@ -368,7 +368,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-bold text-gray-500 mt-1">View and handle customer payments & overall orders.</p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
+                <table className="w-full text-left whitespace-nowrap">
                   <thead className="bg-gray-50/50 text-gray-400 font-black text-xs uppercase tracking-widest">
                     <tr>
                       <th className="p-6">Order ID</th>
@@ -459,9 +459,9 @@ export default function AdminDashboard() {
             key="inventory"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden"
+            className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-x-auto"
           >
-            <table className="w-full text-left">
+            <table className="w-full text-left whitespace-nowrap min-w-[800px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
                   <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Item Name</th>
@@ -534,8 +534,8 @@ export default function AdminDashboard() {
               </form>
             </div>
 
-            <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
-              <table className="w-full text-left">
+            <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-x-auto">
+              <table className="w-full text-left whitespace-nowrap min-w-[600px]">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
                     <th className="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Staff Member</th>
@@ -666,7 +666,21 @@ export default function AdminDashboard() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 block">Image URL</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 block flex justify-between">
+                    Image URL
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        if (!dishState.name) return;
+                        const keywords = encodeURIComponent(dishState.name.trim().replace(/\s+/g, ','));
+                        const lockId = Math.floor(Math.random() * 10000);
+                        setDishState({...dishState, imageUrl: `https://loremflickr.com/600/400/${keywords}?lock=${lockId}`});
+                      }}
+                      className="text-orange-500 hover:text-orange-600"
+                    >
+                      🪄 Auto-Generate
+                    </button>
+                  </label>
                   <input value={dishState.imageUrl} onChange={(e) => setDishState({...dishState, imageUrl: e.target.value})} placeholder="https://..." className="w-full bg-gray-50 border-none rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-orange-500" />
                 </div>
                 <button type="submit" className="w-full py-4 bg-orange-500 text-white rounded-xl font-black shadow-lg shadow-orange-100 hover:bg-orange-600 transition-all">Save Dish</button>

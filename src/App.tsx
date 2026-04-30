@@ -127,15 +127,15 @@ export default function App() {
       
       {/* Top Navigation */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('home')}>
+        <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate('home')}>
           <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-200">
             <ChefHat size={24} />
           </div>
-          <span className="text-xl font-black tracking-tighter text-gray-900">RMS ENTERPRISE</span>
+          <span className="text-xl font-black tracking-tighter text-gray-900 hidden lg:block">RMS ENTERPRISE</span>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <nav className="flex overflow-x-auto items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100 max-w-[40vw] sm:max-w-[50vw] md:max-w-none hide-scrollbar">
+        <div className="flex flex-1 justify-end items-center gap-2 md:gap-4 overflow-hidden">
+          <nav className="flex overflow-x-auto items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-100 no-scrollbar w-full md:w-auto">
             <NavButton active={view === 'home'} onClick={() => navigate('home')} icon={<HomeIcon size={18} />} label="Home" />
             <NavButton active={view === 'menu'} onClick={() => navigate('menu')} icon={<UtensilsCrossed size={18} />} label="Menu" />
             
@@ -317,7 +317,7 @@ function NavButton({ active, onClick, icon, label }: { active: boolean, onClick:
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shrink-0 whitespace-nowrap ${
         active ? 'bg-white text-orange-500 shadow-sm' : 'text-gray-400 hover:text-gray-600'
       }`}
     >

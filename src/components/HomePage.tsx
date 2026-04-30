@@ -27,12 +27,12 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
             <span className="inline-block px-4 py-1.5 bg-orange-500 text-white text-xs font-black uppercase tracking-widest rounded-full mb-6">
               Now Open for Enterprise
             </span>
-            <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
               CRAFTING <br />
               <span className="text-orange-500">CULINARY</span> <br />
               EXCELLENCE.
             </h1>
-            <p className="text-lg md:text-xl text-gray-300 font-medium max-w-xl mb-10 leading-relaxed">
+            <p className="text-base md:text-xl text-gray-300 font-medium max-w-xl mb-10 leading-relaxed">
               Experience the future of dining with our AI-powered restaurant management system. Fresh ingredients, real-time tracking, and seamless service.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
