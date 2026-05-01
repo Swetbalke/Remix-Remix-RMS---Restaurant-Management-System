@@ -32,7 +32,7 @@ export default function App() {
   const [view, setView] = useState<View>('home');
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const { user, setUser, logout } = useAuthStore();
-  const { items } = useCartStore();
+  const { items, setTableId } = useCartStore();
   
   const [showLogin, setShowLogin] = useState(false);
   const [loginMode, setLoginMode] = useState<'login' | 'register'>('login');
@@ -42,7 +42,16 @@ export default function App() {
 
   useEffect(() => {
     socketService.connect();
-    // Handle hash routing for simple navigation
+    
+    // Check for table QR parameter
+    const params = new URLSearchParams(window.location.search);
+    const tableIdParam = params.get('table');
+    if (tableIdParam) {
+      setTableId(tableIdParam);
+      setView('menu');
+    }
+    
+    // Auth loaded by store already, but can read here if needed
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '') as View;
       if (['home', 'menu', 'cart', 'tracking', 'admin', 'kds', 'pos', 'employee-orders'].includes(hash)) {
@@ -103,13 +112,26 @@ export default function App() {
 
   const handleAuth = async () => {
     try {
-      let result;
-      if (loginMode === 'register') {
-        result = await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        result = await signInWithEmailAndPassword(auth, email, password);
+      const endpoint = loginMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+         throw new Error(data.error || 'Authentication failed');
       }
-      await authenticateWithBackend(result.user, name);
+      
+      localStorage.setItem('token', data.accessToken);
+      setUser(data.user);
+      setShowLogin(false);
+      
+      if (data.user.role === 'ADMIN' || data.user.role === 'MANAGER') navigate('admin');
+      else if (data.user.role === 'EMPLOYEE') navigate('pos');
+      else navigate('menu');
+      
     } catch (err: any) {
       console.error('Auth error', err);
       toast.error(err.message || 'Authentication failed');

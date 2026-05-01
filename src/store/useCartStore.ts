@@ -3,6 +3,8 @@ import { MenuItem, OrderItem } from '../types';
 
 interface CartState {
   items: OrderItem[];
+  tableId: string | null;
+  setTableId: (id: string | null) => void;
   addItem: (item: MenuItem) => void;
   removeItem: (itemId: string) => void;
   clearCart: () => void;
@@ -11,6 +13,8 @@ interface CartState {
 
 export const useCartStore = create<CartState>((set) => ({
   items: [],
+  tableId: null,
+  setTableId: (id) => set({ tableId: id }),
   addItem: (item) => set((state) => {
     const existing = state.items.find((i) => i.menuItemId === item.id);
     if (existing) {

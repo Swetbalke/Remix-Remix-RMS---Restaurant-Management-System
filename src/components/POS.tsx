@@ -32,12 +32,15 @@ export default function POS() {
   const [search, setSearch] = useState('');
   const [table, setTable] = useState('1');
   const [loading, setLoading] = useState(false);
+  const prevCount = React.useRef(0);
 
   useEffect(() => {
     fetchMenu();
     fetchOrders();
-    // In a real app we'd poll or listen via socket for new orders here
-  }, [activeTab]);
+    // Poll for new orders every 5 seconds
+    const interval = setInterval(fetchOrders, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchMenu = async () => {
     try {
@@ -55,11 +58,17 @@ export default function POS() {
       const res = await fetch('/api/orders');
       if (res.ok) {
         const data = await res.json();
-        setOrders(Array.isArray(data) ? data : []);
+        const newOrders = Array.isArray(data) ? data : [];
+        if (newOrders.length > prevCount.current && prevCount.current !== 0) {
+           // Play sound alert
+           const msg = new SpeechSynthesisUtterance("New order received");
+           window.speechSynthesis.speak(msg);
+        }
+        prevCount.current = newOrders.length;
+        setOrders(newOrders);
       }
     } catch (e) {
       console.error(e);
-      setOrders([]);
     }
   };
 
@@ -105,7 +114,7 @@ export default function POS() {
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tableNumber: table, items: dbItems, total: total * 1.05, paymentMethod: 'CASH' })
+        body: JSON.stringify({ tableId: table, items: dbItems, total: total * 1.05, paymentMethod: 'CASH' })
       });
       if (res.ok) {
         toast.success('Order placed successfully!');

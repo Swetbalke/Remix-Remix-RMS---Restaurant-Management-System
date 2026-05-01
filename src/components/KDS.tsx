@@ -20,33 +20,23 @@ export default function KDS() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const prevCount = useRef(0);
 
   useEffect(() => {
     fetchOrders();
-    socketService.joinRoom("kitchen");
-    
-    const handleNewOrder = (newOrder: Order) => {
-      setOrders(prev => [newOrder, ...prev]);
-      playAlert();
-      toast.info(`New Order from Table ${newOrder.tableNumber}!`, {
-        icon: <Bell className="text-orange-500" />
-      });
-    };
-
-    socketService.onNewOrder(handleNewOrder);
-    socketService.onOrderUpdated((updatedOrder) => {
-      setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
-    });
-
-    return () => {
-      socketService.off("new-order", handleNewOrder);
-    };
+    // Poll every 5s
+    const interval = setInterval(fetchOrders, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const playAlert = () => {
-    if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log('Audio play failed', e));
-    }
+    try {
+      const msg = new SpeechSynthesisUtterance("Kitchen order received");
+      window.speechSynthesis.speak(msg);
+      if (audioRef.current) {
+        audioRef.current.play().catch(e => console.log('Audio play failed', e));
+      }
+    } catch(e){}
   };
 
   const fetchOrders = async () => {
@@ -54,7 +44,12 @@ export default function KDS() {
       const res = await fetch('/api/orders');
       const data = await res.json();
       if (Array.isArray(data)) {
-        setOrders(data.filter((o: Order) => o.status !== 'paid' && o.status !== 'cancelled'));
+        const activeOrders = data.filter((o: Order) => o.status !== 'paid' && o.status !== 'cancelled');
+        if (activeOrders.length > prevCount.current && prevCount.current !== 0) {
+           playAlert();
+        }
+        prevCount.current = activeOrders.length;
+        setOrders(activeOrders);
       } else {
         setOrders([]);
       }

@@ -9,6 +9,7 @@ import { billingRouter } from './modules/billing/billing.routes';
 import { kitchenRouter } from './modules/kitchen/kitchen.routes';
 import { inventoryRouter } from './modules/inventory/inventory.routes';
 import { reportsRouter } from './modules/reports/reports.routes';
+import { aiRouter } from './modules/ai/ai.routes';
 
 const app = express.Router();
 
@@ -22,6 +23,7 @@ app.use('/billing', billingRouter);
 app.use('/kitchen', kitchenRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/analytics', reportsRouter);
+app.use('/ai', aiRouter);
 
 // Error handler middleware
 app.use((err: any, req: any, res: any, next: any) => {

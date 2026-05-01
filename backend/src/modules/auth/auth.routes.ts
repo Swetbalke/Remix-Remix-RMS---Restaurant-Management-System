@@ -14,7 +14,7 @@ router.post('/register', asyncHandler(async (req: any, res: any) => {
   
   // Assign role based on email, default to CUSTOMER if that existed, or WAITER for now.
   // Wait, what roles are available? WAITER, MANAGER, CHEF, ADMIN, admin. Let's make swetbalke2005@gmail.com ADMIN
-  const role = (email === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'EMPLOYEE';
+  const role = (email === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'CUSTOMER';
 
   const user = await prisma.user.create({
     data: { name, email, role: role as any, passwordHash }
@@ -45,7 +45,7 @@ router.post('/firebase', asyncHandler(async (req: any, res: any) => {
     let user = await prisma.user.findUnique({ where: { email } });
     
     if (!user) {
-      const role = (email === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'EMPLOYEE';
+      const role = (email === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'CUSTOMER';
       const passwordHash = await bcrypt.hash(uid, 10); // Dummy hash using uid
       user = await prisma.user.create({
         data: { name: name || 'User', email, role, passwordHash }

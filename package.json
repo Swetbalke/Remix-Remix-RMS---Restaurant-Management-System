@@ -8,6 +8,8 @@
     "build": "npx prisma generate && vite build",
     "start": "npx prisma db push --accept-data-loss && npx tsx seed.ts && npx tsx server.ts",
     "preview": "vite preview",
+    "postinstall": "prisma generate",
+    "setup": "npx prisma db push && npx tsx seed.ts",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
   },

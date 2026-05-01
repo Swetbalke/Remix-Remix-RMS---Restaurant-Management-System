@@ -5,27 +5,38 @@ import { asyncHandler } from '../../utils/asyncHandler';
 const router = Router();
 
 router.post('/', asyncHandler(async (req: any, res: any) => {
-  const { tableNumber, items, total, paymentMethod } = req.body;
+  const { tableId, items, total, paymentMethod } = req.body;
   
   // Note: Here we could add stock checking logic if needed
   
   // Logic: if paymentMethod is UPI or CARD (simulated), we can immediately mark it UNPAID but then we should call the pay endpoint, or mark it PAID if the dummy flow specifies it. Let's start with UNPAID.
   
+  let tableConnect;
+  if (tableId) {
+    const tableExists = await prisma.restaurantTable.findUnique({ where: { id: tableId }});
+    if (tableExists) tableConnect = { connect: { id: tableId } };
+  }
+
+  const validItems = items.filter((item: any) => item.menuItemId || item.id);
+  if (validItems.length === 0) {
+    return res.status(400).json({ error: 'No valid items provided' });
+  }
+
   const order = await prisma.order.create({
     data: {
-      totalAmount: total || 0,
+      totalAmount: Number(total) || 0,
       status: 'PENDING',
       paymentStatus: 'UNPAID',
-      table: tableNumber ? { connect: { id: tableNumber } } : undefined, // Assuming tableNumber might be IDs or we leave it disconnected for now
+      table: tableConnect,
       OrderItems: {
-        create: items.map((item: any) => ({
-          menuItemId: item.menuItemId || item.id,
-          quantity: item.quantity,
-          unitPrice: item.price || item.unitPrice || 0
+        create: validItems.map((item: any) => ({
+          menuItemId: String(item.menuItemId || item.id),
+          quantity: Number(item.quantity) || 1,
+          unitPrice: Number(item.price || item.unitPrice || 0)
         }))
       }
     },
-    include: { OrderItems: true }
+    include: { OrderItems: true, table: true }
   });
   
   res.status(201).json(order);

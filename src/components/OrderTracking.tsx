@@ -11,14 +11,9 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
   useEffect(() => {
     fetchOrder();
     
-    const handleStatusUpdate = (updatedOrder: any) => {
-      if (updatedOrder.id === orderId) {
-        setOrder(updatedOrder);
-      }
-    };
-
-    socketService.on('order-updated', handleStatusUpdate);
-    return () => socketService.off('order-updated', handleStatusUpdate);
+    // Poll for status updates
+    const interval = setInterval(fetchOrder, 3000);
+    return () => clearInterval(interval);
   }, [orderId]);
 
   const fetchOrder = async () => {
@@ -52,7 +47,11 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
           Order ID: #{orderId.slice(-6)}
         </Badge>
         <h2 className="text-5xl font-black text-gray-900 tracking-tight">Track Your Feast</h2>
-        <p className="text-gray-500 font-bold mt-2">We're working hard to get your food ready!</p>
+        {order.status === 'pending' || order.status === 'in_progress' ? (
+          <p className="text-orange-500 font-black mt-2 text-xl animate-pulse">Wait time: ~1 min. Kitchen is confirming!</p>
+        ) : (
+          <p className="text-gray-500 font-bold mt-2">We're working hard to get your food ready!</p>
+        )}
       </div>
 
       <Card className="p-10 rounded-[3rem] border-gray-100 shadow-2xl relative overflow-hidden">

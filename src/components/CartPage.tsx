@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 const isRazorpayEnabled = (import.meta as any).env?.VITE_RAZORPAY_ENABLED === 'true';
 
 export default function CartPage({ onCheckout }: { onCheckout: (orderId: string) => void }) {
-  const { items, removeItem, updateQuantity, clearCart } = useCartStore();
+  const { items, tableId, removeItem, updateQuantity, clearCart } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'UPI' | 'CASH'>('CASH');
   
@@ -34,6 +34,7 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           items: dbItems, 
+          tableId,
           total: total,
           paymentMethod 
         })
@@ -79,11 +80,11 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
       <div className="lg:col-span-2 space-y-8">
-        <div className="flex justify-between items-end">
-          <h2 className="text-4xl font-black text-gray-900 tracking-tight">Shopping Cart</h2>
-          <button onClick={clearCart} className="text-sm font-black text-red-500 hover:underline">Clear All</button>
+        <div className="flex justify-between items-end gap-4">
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Shopping Cart</h2>
+          <button onClick={clearCart} className="text-sm font-black whitespace-nowrap text-red-500 hover:underline">Clear All</button>
         </div>
 
         <div className="space-y-4">
@@ -95,23 +96,25 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 key={item.menuItemId}
-                className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center gap-6"
+                className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6"
               >
-                <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-50 rounded-2xl overflow-hidden flex-shrink-0">
                   <img src={`https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80`} alt={item.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-black text-gray-900">{item.name}</h3>
-                  <p className="text-orange-500 font-black">₹{item.price}</p>
+                <div className="flex-1 w-full">
+                  <h3 className="text-base sm:text-lg font-black text-gray-900 line-clamp-2">{item.name}</h3>
+                  <p className="text-orange-500 font-black mt-1">₹{item.price}</p>
                 </div>
-                <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-xl">
-                  <button onClick={() => updateQuantity(item.menuItemId, item.quantity - 1)} className="p-1 hover:text-orange-500 transition-all"><Minus size={18} /></button>
-                  <span className="w-6 text-center font-black">{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.menuItemId, item.quantity + 1)} className="p-1 hover:text-orange-500 transition-all"><Plus size={18} /></button>
+                <div className="flex items-center justify-between w-full sm:w-auto mt-2 sm:mt-0">
+                  <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-xl">
+                    <button onClick={() => updateQuantity(item.menuItemId, item.quantity - 1)} className="p-1 hover:text-orange-500 transition-all"><Minus size={18} /></button>
+                    <span className="w-6 text-center font-black">{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.menuItemId, item.quantity + 1)} className="p-1 hover:text-orange-500 transition-all"><Plus size={18} /></button>
+                  </div>
+                  <button onClick={() => removeItem(item.menuItemId)} className="p-2 text-gray-300 hover:text-red-500 transition-all sm:ml-4">
+                    <Trash2 size={20} />
+                  </button>
                 </div>
-                <button onClick={() => removeItem(item.menuItemId)} className="p-2 text-gray-300 hover:text-red-500 transition-all">
-                  <Trash2 size={20} />
-                </button>
               </motion.div>
             ))}
           </AnimatePresence>
