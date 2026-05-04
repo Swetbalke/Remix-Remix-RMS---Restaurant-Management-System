@@ -29,15 +29,14 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
 
   const steps = [
     { id: 'pending', label: 'Order Placed', icon: <CheckCircle2 />, color: 'text-blue-500' },
-    { id: 'in_progress', label: 'In Kitchen', icon: <ChefHat />, color: 'text-orange-500' },
+    { id: 'preparing', label: 'In Kitchen', icon: <ChefHat />, color: 'text-orange-500' },
     { id: 'completed', label: 'Served', icon: <Utensils />, color: 'text-green-500' },
     { id: 'paid', label: 'Payment complete', icon: <PackageCheck />, color: 'text-gray-900' },
   ];
 
-  // We should also look at paymentStatus to decide if 'paid' step is completed
   const currentStepIdx = Math.max(
-    steps.findIndex(s => s.id === order.status),
-    order.paymentStatus === 'paid' && order.status === 'completed' ? 3 : -1
+    steps.findIndex(s => s.id === order.status || (s.id === 'preparing' && order.status === 'confirmed')),
+    (order.paymentStatus === 'paid' && order.status === 'completed') || order.status === 'paid' ? 3 : -1
   );
 
   return (
@@ -47,7 +46,7 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
           Order ID: #{orderId.slice(-6)}
         </Badge>
         <h2 className="text-5xl font-black text-gray-900 tracking-tight">Track Your Feast</h2>
-        {order.status === 'pending' || order.status === 'in_progress' ? (
+        {order.status === 'pending' || order.status === 'preparing' || order.status === 'confirmed' ? (
           <p className="text-orange-500 font-black mt-2 text-xl animate-pulse">Wait time: ~1 min. Kitchen is confirming!</p>
         ) : (
           <p className="text-gray-500 font-bold mt-2">We're working hard to get your food ready!</p>

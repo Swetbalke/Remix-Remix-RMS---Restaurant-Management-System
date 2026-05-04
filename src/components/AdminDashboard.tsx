@@ -57,6 +57,13 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
+    let interval: NodeJS.Timeout;
+    if (activeTab === 'orders') {
+      interval = setInterval(fetchData, 5000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [activeTab]);
 
   const fetchData = async () => {

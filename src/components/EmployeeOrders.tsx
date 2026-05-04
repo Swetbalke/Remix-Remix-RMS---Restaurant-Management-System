@@ -20,7 +20,7 @@ export default function EmployeeOrders() {
       const res = await fetch('/api/orders');
       let data = await res.json();
       if (Array.isArray(data)) {
-        data = data.filter((o: any) => o.status !== 'COMPLETED' && o.status !== 'CANCELLED');
+        data = data.filter((o: any) => o.status !== 'completed' && o.status !== 'cancelled' && o.status !== 'served' && o.status !== 'paid');
         setOrders(data);
       } else {
         setOrders([]);
@@ -32,7 +32,7 @@ export default function EmployeeOrders() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      await fetch(`/api/orders/${id}/status`, {
+      await fetch(`/api/orders/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -71,7 +71,7 @@ export default function EmployeeOrders() {
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                    order.status === 'PENDING' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
+                    order.status === 'pending' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'
                   }`}>
                     {order.status}
                   </span>
@@ -79,22 +79,22 @@ export default function EmployeeOrders() {
                     #{order.id.slice(-6)}
                   </span>
                 </div>
-                <p className="font-black text-lg">{order.amount ? `₹${order.amount}` : 'Order details not available'}</p>
+                <p className="font-black text-lg">{order.totalAmount ? `₹${order.totalAmount}` : 'Order details not available'}</p>
               </div>
 
               <div className="flex gap-2 items-center">
-                {order.status === 'PENDING' && (
+                {order.status === 'pending' && (
                   <button 
-                    onClick={() => updateStatus(order.id, 'CONFIRMED')}
+                    onClick={() => updateStatus(order.id, 'confirmed')}
                     className="px-6 py-3 bg-blue-500 text-white font-black text-sm rounded-xl hover:bg-blue-600 transition-all flex items-center gap-2"
                   >
                     <CheckCircle2 size={16} /> Accept Order
                   </button>
                 )}
                 
-                {order.status === 'CONFIRMED' && (
+                {(order.status === 'confirmed' || order.status === 'preparing') && (
                   <button 
-                    onClick={() => updateStatus(order.id, 'COMPLETED')}
+                    onClick={() => updateStatus(order.id, 'completed')}
                     className="px-6 py-3 bg-green-500 text-white font-black text-sm rounded-xl hover:bg-green-600 transition-all flex items-center gap-2"
                   >
                     <CheckCircle2 size={16} /> Mark Completed
@@ -102,7 +102,7 @@ export default function EmployeeOrders() {
                 )}
 
                 <button 
-                  onClick={() => updateStatus(order.id, 'CANCELLED')}
+                  onClick={() => updateStatus(order.id, 'cancelled')}
                   className="px-4 py-3 bg-red-50 text-red-500 font-black text-sm rounded-xl hover:bg-red-100 transition-all"
                 >
                   <XCircle size={16} />
