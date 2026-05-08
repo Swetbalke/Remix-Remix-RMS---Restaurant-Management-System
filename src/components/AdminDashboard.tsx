@@ -30,6 +30,7 @@ import {
 } from 'recharts';
 import { aiService } from '../services/aiService';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 type AdminTab = 'analytics' | 'orders' | 'menu' | 'inventory' | 'staff' | 'ai';
 
@@ -38,7 +39,6 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [insights, setInsights] = useState<any[]>([]);
   const [inventory, setInventory] = useState<any[]>([]);
-  // Store orders for the orders tab
   const [allOrders, setAllOrders] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[]>([]);
@@ -48,6 +48,7 @@ export default function AdminDashboard() {
   
   // Menu Form State
   const [showDishForm, setShowDishForm] = useState(false);
+  const [editingDishId, setEditingDishId] = useState<string | null>(null);
   const [dishState, setDishState] = useState({ name: '', description: '', price: '', imageUrl: '', categoryId: '' });
 
   // AI Tools State
@@ -172,25 +173,61 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteDish = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this dish?')) return;
+    try {
+      await fetch(`/api/menu/${id}`, { method: 'DELETE' });
+      fetchData();
+      toast.success('Dish deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete dish', err);
+      toast.error('Failed to delete dish');
+    }
+  };
+
+  const handleEditDish = (item: any) => {
+    setEditingDishId(item.id);
+    setDishState({
+      name: item.name,
+      description: item.description || '',
+      price: item.price.toString(),
+      imageUrl: item.imageUrl || '',
+      categoryId: item.categoryId
+    });
+    setShowDishForm(true);
+  };
+
   const handleAddDish = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await fetch('/api/menu', {
-        method: 'POST',
+      const url = editingDishId ? `/api/menu/${editingDishId}` : '/api/menu';
+      const method = editingDishId ? 'PATCH' : 'POST';
+      
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: dishState.name,
           description: dishState.description,
           price: parseFloat(dishState.price),
           imageUrl: dishState.imageUrl,
-          categoryId: dishState.categoryId || undefined // Will need a default DB category fallback if null
+          categoryId: dishState.categoryId || undefined
         })
       });
-      setShowDishForm(false);
-      setDishState({ name: '', description: '', price: '', imageUrl: '', categoryId: '' });
-      fetchData();
+      
+      if (res.ok) {
+        setShowDishForm(false);
+        setEditingDishId(null);
+        setDishState({ name: '', description: '', price: '', imageUrl: '', categoryId: '' });
+        fetchData();
+        toast.success(editingDishId ? 'Dish updated!' : 'Dish added!');
+      } else {
+        const error = await res.json();
+        toast.error(error.message || 'Failed to save dish');
+      }
     } catch (err) {
-      console.error('Failed to add dish', err);
+      console.error('Failed to save dish', err);
+      toast.error('Failed to save dish');
     }
   };
 
@@ -427,7 +464,11 @@ export default function AdminDashboard() {
                 <UtensilsCrossed className="text-orange-500" /> Menu Builder
               </h3>
               <button 
-                onClick={() => setShowDishForm(true)}
+                onClick={() => {
+                  setEditingDishId(null);
+                  setDishState({ name: '', description: '', price: '', imageUrl: '', categoryId: '' });
+                  setShowDishForm(true);
+                }}
                 className="px-6 py-3 bg-gray-900 text-white rounded-xl text-sm font-black hover:bg-black transition-all flex items-center gap-2"
               >
                 + Add Dish
@@ -451,8 +492,8 @@ export default function AdminDashboard() {
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{item.category?.name}</p>
                     <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{item.description || 'No description provided.'}</p>
                     <div className="mt-6 flex gap-2">
-                      <button className="flex-1 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-black hover:bg-gray-100 transition-all">Edit</button>
-                      <button className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-black hover:bg-red-100 transition-all">Delete</button>
+                      <button onClick={() => handleEditDish(item)} className="flex-1 py-2 bg-gray-50 text-gray-700 rounded-lg text-sm font-black hover:bg-gray-100 transition-all">Edit</button>
+                      <button onClick={() => handleDeleteDish(item.id)} className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-black hover:bg-red-100 transition-all">Delete</button>
                     </div>
                   </div>
                 </div>
@@ -649,7 +690,7 @@ export default function AdminDashboard() {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               className="relative bg-white w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl max-h-[90vh] overflow-y-auto"
             >
-              <h3 className="text-3xl font-black text-gray-900 mb-8">Add New Dish</h3>
+              <h3 className="text-3xl font-black text-gray-900 mb-8">{editingDishId ? 'Edit Dish' : 'Add New Dish'}</h3>
               <form onSubmit={handleAddDish} className="space-y-6">
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 block">Dish Name</label>
