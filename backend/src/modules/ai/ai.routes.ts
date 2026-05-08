@@ -10,7 +10,7 @@ router.post('/caption', asyncHandler(async (req: any, res: any) => {
   if (!process.env.GEMINI_API_KEY) return res.status(501).json({ error: 'Gemini API not configured' });
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-1.5-flash",
     contents: `Generate a catchy Instagram caption for a restaurant dish called "${itemName}". Description: ${description}. Include relevant emojis and hashtags.`,
   });
   res.json({ caption: response.text });
@@ -21,7 +21,7 @@ router.post('/insights', asyncHandler(async (req: any, res: any) => {
   if (!process.env.GEMINI_API_KEY) return res.status(501).json({ error: 'Gemini API not configured' });
 
   const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-1.5-flash",
     contents: `Analyze this restaurant analytics data and provide 3 actionable business insights: ${JSON.stringify(analyticsData)}`,
     config: {
       responseMimeType: "application/json",

@@ -10,14 +10,14 @@ const router = Router();
 
 router.post('/register', asyncHandler(async (req: any, res: any) => {
   const { name, email, password } = req.body;
+  const normalizedEmail = email.toLowerCase();
   const passwordHash = await bcrypt.hash(password, 10);
   
-  // Assign role based on email, default to CUSTOMER if that existed, or WAITER for now.
-  // Wait, what roles are available? WAITER, MANAGER, CHEF, ADMIN, admin. Let's make swetbalke2005@gmail.com ADMIN
-  const role = (email === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'CUSTOMER';
+  // Assign role based on email
+  const role = (normalizedEmail === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'CUSTOMER';
 
   const user = await prisma.user.create({
-    data: { name, email, role: role as any, passwordHash }
+    data: { name, email: normalizedEmail, role: role as any, passwordHash }
   });
   
   const accessToken = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1d' });
@@ -26,7 +26,8 @@ router.post('/register', asyncHandler(async (req: any, res: any) => {
 
 router.post('/login', asyncHandler(async (req: any, res: any) => {
   const { email, password } = req.body;
-  const user = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.toLowerCase();
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (!user || !user.isActive) return res.status(401).json({ error: 'Invalid credentials or inactive' });
   
   const isValid = await bcrypt.compare(password, user.passwordHash);
@@ -39,16 +40,16 @@ router.post('/login', asyncHandler(async (req: any, res: any) => {
 router.post('/firebase', asyncHandler(async (req: any, res: any) => {
   try {
     const { email, name, uid } = req.body;
-    console.log("Firebase auth attempt:", { email, name, uid });
     if (!email) return res.status(400).json({ error: 'Email is required' });
+    const normalizedEmail = email.toLowerCase();
     
-    let user = await prisma.user.findUnique({ where: { email } });
+    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     
     if (!user) {
-      const role = (email === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'CUSTOMER';
-      const passwordHash = await bcrypt.hash(uid, 10); // Dummy hash using uid
+      const role = (normalizedEmail === 'swetbalke2005@gmail.com') ? 'ADMIN' : 'CUSTOMER';
+      const passwordHash = await bcrypt.hash(uid, 10);
       user = await prisma.user.create({
-        data: { name: name || 'User', email, role, passwordHash }
+        data: { name: name || 'User', email: normalizedEmail, role, passwordHash }
       });
     }
 

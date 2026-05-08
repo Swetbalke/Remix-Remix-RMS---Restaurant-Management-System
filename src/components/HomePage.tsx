@@ -1,124 +1,164 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ChefHat, ArrowRight, Star, Clock, ShieldCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Utensils, Clock, Star, ArrowRight, ChefHat, MapPin, Phone } from 'lucide-react';
 
 export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
   return (
     <div className="space-y-20 pb-20">
       {/* Hero Section */}
-      <section className="relative h-[80vh] flex items-center justify-center overflow-hidden rounded-[3rem]">
-        <div className="absolute inset-0">
+      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden rounded-[3rem] bg-gray-900">
+        <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=2000" 
-            alt="Restaurant Banner" 
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
+            src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80" 
+            className="w-full h-full object-cover opacity-40"
+            alt="Hero Background"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
         </div>
         
-        <div className="relative z-10 max-w-4xl px-8 text-white">
+        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="inline-block px-4 py-1.5 bg-orange-500 text-white text-xs font-black uppercase tracking-widest rounded-full mb-6">
-              Now Open for Enterprise
-            </span>
-            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
+            <Badge label="New: AI-Powered Menu" />
+            <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter mb-6 leading-[0.9]">
               CRAFTING <br />
-              <span className="text-orange-500">CULINARY</span> <br />
-              EXCELLENCE.
+              <span className="text-orange-500">DIGITAL</span> FLAVORS
             </h1>
-            <p className="text-base md:text-xl text-gray-300 font-medium max-w-xl mb-10 leading-relaxed">
-              Experience the future of dining with our AI-powered restaurant management system. Fresh ingredients, real-time tracking, and seamless service.
+            <p className="text-lg md:text-xl text-gray-300 font-bold mb-10 max-w-2xl mx-auto leading-relaxed">
+              Experience the future of dining with RMS Enterprise. Fast ordering, real-time kitchen tracking, and premium ingredients.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button 
                 onClick={onOrderNow}
-                size="lg" 
-                className="bg-orange-500 hover:bg-orange-600 text-white font-black px-10 py-8 text-lg rounded-2xl shadow-2xl shadow-orange-500/20 group"
+                className="w-full sm:w-auto bg-orange-500 text-white px-10 py-5 rounded-2xl text-lg font-black shadow-2xl shadow-orange-500/20 hover:bg-orange-600 hover:scale-105 transition-all flex items-center justify-center gap-3"
               >
-                Order Now <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 font-black px-10 py-8 text-lg rounded-2xl"
-              >
+                Order Now <ArrowRight size={20} />
+              </button>
+              <button className="w-full sm:w-auto bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-5 rounded-2xl text-lg font-black hover:bg-white/20 transition-all">
                 View Gallery
-              </Button>
+              </button>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <FeatureCard 
-          icon={<Star className="text-orange-500" />}
-          title="Premium Quality"
-          description="We source only the finest organic ingredients for every dish we serve."
-        />
-        <FeatureCard 
-          icon={<Clock className="text-blue-500" />}
-          title="Real-time Tracking"
-          description="Watch your order move from the kitchen to your table in real-time."
-        />
-        <FeatureCard 
-          icon={<ShieldCheck className="text-green-500" />}
-          title="Safe & Secure"
-          description="Enterprise-grade security for all your transactions and data."
-        />
-      </section>
+      {/* Stats Section */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-4">
+        <StatItem icon={<Utensils />} count="50+" label="Signature Dishes" />
+        <StatItem icon={<Star />} count="4.9" label="Average Rating" />
+        <StatItem icon={<Clock />} count="15m" label="Fast Delivery" />
+        <StatItem icon={<ChefHat />} count="12" label="Expert Chefs" />
+      </div>
 
-      {/* Featured Items Preview */}
-      <section>
+      {/* Featured Dishes Preview */}
+      <section className="px-4">
         <div className="flex justify-between items-end mb-12">
           <div>
             <h2 className="text-4xl font-black text-gray-900 tracking-tight">Today's Specials</h2>
-            <p className="text-gray-500 font-bold mt-2">Hand-picked by our executive chef</p>
+            <p className="text-gray-500 font-bold mt-1">Handpicked by our executive chef</p>
           </div>
-          <Button variant="ghost" onClick={onOrderNow} className="font-black text-orange-500">View Full Menu</Button>
+          <button onClick={onOrderNow} className="hidden md:flex items-center gap-2 text-orange-500 font-black hover:underline">
+            View All <ArrowRight size={16} />
+          </button>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80', title: 'Healthy Bowl' },
-            { img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80', title: 'Pizza Margherita' },
-            { img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80', title: 'Classic Burger' },
-            { img: 'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=500&q=80', title: 'Avocado Toast' }
-          ].map((item, i) => (
-            <div key={i} className="group cursor-pointer">
-              <div className="relative h-64 rounded-[2rem] overflow-hidden mb-4 shadow-sm group-hover:shadow-xl transition-all">
-                <img 
-                  src={item.img} 
-                  alt="Featured Dish" 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <h3 className="text-xl font-black text-gray-900">{item.title}</h3>
-              <p className="text-gray-500 text-sm font-bold">Starting from ₹299</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <FeaturedCard 
+            image="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80"
+            title="Harvest Grain Bowl"
+            price="₹450"
+            tag="Healthy"
+          />
+          <FeaturedCard 
+            image="https://images.unsplash.com/photo-1476124369491-e7addf5db378?w=800&q=80"
+            title="Truffle Risotto"
+            price="₹850"
+            tag="Premium"
+          />
+          <FeaturedCard 
+            image="https://images.unsplash.com/photo-1481070555726-e2fe8357725c?w=800&q=80"
+            title="Atlantic Salmon"
+            price="₹1200"
+            tag="Bestseller"
+          />
         </div>
       </section>
+
+      {/* Contact Info Bar */}
+      <div className="bg-gray-50 rounded-[2.5rem] p-10 grid grid-cols-1 md:grid-cols-3 gap-8 border border-gray-100">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm">
+            <MapPin size={24} />
+          </div>
+          <div>
+            <p className="font-black text-gray-900">Visit Us</p>
+            <p className="text-sm font-bold text-gray-500">123 Culinary Ave, Foodie City</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm">
+            <Phone size={24} />
+          </div>
+          <div>
+            <p className="font-black text-gray-900">Call Us</p>
+            <p className="text-sm font-bold text-gray-500">+1 234 567 890</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm">
+            <Clock size={24} />
+          </div>
+          <div>
+            <p className="font-black text-gray-900">Opening Hours</p>
+            <p className="text-sm font-bold text-gray-500">Mon - Sun: 10AM - 11PM</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
+function Badge({ label }: { label: string }) {
   return (
-    <div className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all">
-      <div className="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center mb-6">
-        {React.cloneElement(icon as React.ReactElement, { size: 28 } as any)}
+    <span className="inline-block bg-orange-500/20 text-orange-400 px-4 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-6 backdrop-blur-sm border border-orange-500/20">
+      {label}
+    </span>
+  );
+}
+
+function StatItem({ icon, count, label }: { icon: React.ReactNode, count: string, label: string }) {
+  return (
+    <div className="bg-white p-6 rounded-[2rem] border border-gray-100 text-center hover:shadow-xl transition-all group">
+      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 mx-auto mb-4 group-hover:bg-orange-500 group-hover:text-white transition-all">
+        {icon}
       </div>
-      <h3 className="text-2xl font-black text-gray-900 mb-3">{title}</h3>
-      <p className="text-gray-500 font-medium leading-relaxed">{description}</p>
+      <p className="text-2xl font-black text-gray-900 mb-1">{count}</p>
+      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</p>
+    </div>
+  );
+}
+
+function FeaturedCard({ image, title, price, tag }: { image: string, title: string, price: string, tag: string }) {
+  return (
+    <div className="group cursor-pointer">
+      <div className="relative h-80 rounded-[2.5rem] overflow-hidden mb-6">
+        <img src={image} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt={title} />
+        <div className="absolute top-6 left-6">
+          <span className="bg-white/90 backdrop-blur-sm px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+            {tag}
+          </span>
+        </div>
+      </div>
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-xl font-black text-gray-900">{title}</h3>
+          <p className="text-gray-400 font-bold">Premium Dish</p>
+        </div>
+        <p className="text-2xl font-black text-orange-500">{price}</p>
+      </div>
     </div>
   );
 }

@@ -4,11 +4,8 @@ import {
   Clock, 
   CheckCircle2, 
   ChefHat,
-  AlertCircle,
-  Timer,
-  Bell,
-  History,
-  Filter
+  Filter,
+  Bell
 } from 'lucide-react';
 import { socketService } from '../services/socketService';
 import { Order, OrderStatus } from '../types';
@@ -20,18 +17,34 @@ export default function KDS() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const prevCount = useRef(0);
 
   useEffect(() => {
     fetchOrders();
-    // Poll every 5s
-    const interval = setInterval(fetchOrders, 5000);
-    return () => clearInterval(interval);
+    
+    const handleNewOrder = (newOrder: Order) => {
+      setOrders(prev => [newOrder, ...prev]);
+      playAlert();
+      toast.success(`New order received! Table: ${newOrder.tableNumber}`, {
+        icon: <Bell className="text-orange-500" />,
+      });
+    };
+
+    const handleOrderUpdate = (updatedOrder: Order) => {
+      setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+    };
+
+    socketService.on('new-order', handleNewOrder);
+    socketService.on('order-updated', handleOrderUpdate);
+
+    return () => {
+      socketService.off('new-order', handleNewOrder);
+      socketService.off('order-updated', handleOrderUpdate);
+    };
   }, []);
 
   const playAlert = () => {
     try {
-      const msg = new SpeechSynthesisUtterance("Kitchen order received");
+      const msg = new SpeechSynthesisUtterance("New order received");
       window.speechSynthesis.speak(msg);
       if (audioRef.current) {
         audioRef.current.play().catch(e => console.log('Audio play failed', e));
@@ -44,14 +57,9 @@ export default function KDS() {
       const res = await fetch('/api/orders');
       const data = await res.json();
       if (Array.isArray(data)) {
+        // Only show active orders in KDS
         const activeOrders = data.filter((o: Order) => o.status !== 'paid' && o.status !== 'cancelled');
-        if (activeOrders.length > prevCount.current && prevCount.current !== 0) {
-           playAlert();
-        }
-        prevCount.current = activeOrders.length;
         setOrders(activeOrders);
-      } else {
-        setOrders([]);
       }
     } catch (err) {
       console.error('Failed to fetch orders', err);
@@ -66,6 +74,7 @@ export default function KDS() {
         body: JSON.stringify({ status })
       });
       if (res.ok) {
+        // Handled by socket update too, but updating locally for instant feedback
         const updatedOrder = await res.json();
         setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
       }
@@ -74,16 +83,11 @@ export default function KDS() {
     }
   };
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case 'pending': return 'bg-blue-500';
-      case 'preparing': return 'bg-orange-500';
-      case 'served': return 'bg-green-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const filteredOrders = orders.filter(o => filter === 'all' || o.status === filter);
+  const filteredOrders = orders.filter(o => {
+    if (filter === 'all') return true;
+    if (filter === 'completed') return o.status === 'completed' || o.status === 'served';
+    return o.status === filter;
+  });
 
   return (
     <div className="space-y-8">
@@ -111,7 +115,7 @@ export default function KDS() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <AnimatePresence mode="popLayout">
           {filteredOrders.map((order) => (
-            <motion.div key={order.id} layout>
+            <motion.div key={order.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
               <OrderCard order={order} onUpdateStatus={updateStatus} />
             </motion.div>
           ))}
@@ -145,50 +149,43 @@ function OrderCard({ order, onUpdateStatus }: { order: Order, onUpdateStatus: (i
   const isDelayed = elapsed > 15;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className={`bg-white rounded-[2.5rem] border-2 overflow-hidden flex flex-col transition-all duration-500 ${
+    <div className={`bg-white rounded-[2.5rem] border-2 overflow-hidden flex flex-col transition-all duration-500 h-full ${
         isDelayed ? 'border-red-100 shadow-red-50' : 'border-gray-50 shadow-sm hover:shadow-xl'
-      }`}
-    >
-      <div className="p-8 flex-1">
-        <div className="flex justify-between items-start mb-8">
+      }`}>
+      <div className="p-6 flex-1">
+        <div className="flex justify-between items-start mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-3xl font-black text-gray-900 tracking-tighter">Table {order.tableNumber}</h3>
+              <h3 className="text-2xl font-black text-gray-900 tracking-tighter">{order.tableNumber}</h3>
               {isDelayed && <Badge className="bg-red-500 text-white font-black text-[10px] animate-pulse">DELAYED</Badge>}
             </div>
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Order #{order.id.slice(-6)}</p>
           </div>
           <div className="text-right">
-            <div className={`flex items-center gap-1.5 font-black text-sm ${isDelayed ? 'text-red-500' : 'text-gray-400'}`}>
-              <Clock size={16} />
+            <div className={`flex items-center gap-1.5 font-black text-xs ${isDelayed ? 'text-red-500' : 'text-gray-400'}`}>
+              <Clock size={14} />
               {elapsed}m
             </div>
           </div>
         </div>
 
-        <div className="space-y-4 mb-8">
+        <div className="space-y-3 mb-6">
           {order.items.map((item, idx) => (
-            <div key={idx} className="flex items-start gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-50">
-              <span className="w-8 h-8 bg-white rounded-xl flex items-center justify-center font-black text-gray-900 shadow-sm border border-gray-100">{item.quantity}x</span>
+            <div key={idx} className="flex items-start gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-50">
+              <span className="w-7 h-7 bg-white rounded-lg flex items-center justify-center font-black text-gray-900 shadow-sm border border-gray-100 text-xs">{item.quantity}x</span>
               <div className="flex-1">
-                <p className="font-bold text-gray-800 leading-tight">{item.name}</p>
-                {/* Mock special notes if needed */}
-                {idx === 0 && <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mt-1">Extra Spicy</p>}
+                <p className="font-bold text-gray-800 leading-tight text-sm">{item.name}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="p-6 bg-gray-50/50 border-t border-gray-50">
+      <div className="p-4 bg-gray-50/50 border-t border-gray-50">
         {order.status === 'pending' && (
           <Button 
             onClick={() => onUpdateStatus(order.id, 'preparing')}
-            className="w-full py-8 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100"
+            className="w-full py-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-sm shadow-lg shadow-blue-100"
           >
             Start Cooking
           </Button>
@@ -196,7 +193,7 @@ function OrderCard({ order, onUpdateStatus }: { order: Order, onUpdateStatus: (i
         {order.status === 'preparing' && (
           <Button 
             onClick={() => onUpdateStatus(order.id, 'completed')}
-            className="w-full py-8 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-orange-100"
+            className="w-full py-6 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-sm shadow-lg shadow-orange-100"
           >
             Mark Ready
           </Button>
@@ -204,13 +201,13 @@ function OrderCard({ order, onUpdateStatus }: { order: Order, onUpdateStatus: (i
         {(order.status === 'served' || order.status === 'completed') && (
           <Button 
             onClick={() => onUpdateStatus(order.id, 'paid')}
-            className="w-full py-8 bg-gray-900 hover:bg-black text-white rounded-2xl font-black text-lg shadow-xl shadow-gray-200"
+            className="w-full py-6 bg-gray-900 hover:bg-black text-white rounded-xl font-black text-sm shadow-lg shadow-gray-200"
           >
             Mark as Paid
           </Button>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -225,10 +222,10 @@ function FilterButton({ active, onClick, label, count, color = 'gray' }: { activ
   return (
     <button 
       onClick={onClick}
-      className={`px-6 py-3 rounded-2xl font-black text-sm flex items-center gap-3 transition-all border border-gray-100 shadow-sm ${colors[color]}`}
+      className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all border border-gray-100 shadow-sm ${colors[color]}`}
     >
       {label}
-      <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${active ? 'bg-white/20' : 'bg-gray-50'}`}>
+      <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[8px] font-black ${active ? 'bg-white/20' : 'bg-gray-50'}`}>
         {count}
       </span>
     </button>

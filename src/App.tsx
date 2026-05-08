@@ -9,7 +9,8 @@ import {
   UtensilsCrossed,
   LayoutDashboard,
   ClipboardList,
-  Monitor
+  Monitor,
+  History
 } from 'lucide-react';
 import HomePage from './components/HomePage';
 import CustomerMenu from './components/CustomerMenu';
@@ -19,6 +20,7 @@ import AdminDashboard from './components/AdminDashboard';
 import KDS from './components/KDS';
 import POS from './components/POS';
 import EmployeeOrders from './components/EmployeeOrders';
+import OrderHistory from './components/OrderHistory';
 import { socketService } from './services/socketService';
 import { useAuthStore } from './store/useAuthStore';
 import { useCartStore } from './store/useCartStore';
@@ -26,7 +28,7 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase';
 
-type View = 'home' | 'menu' | 'cart' | 'tracking' | 'admin' | 'kds' | 'pos' | 'employee-orders';
+type View = 'home' | 'menu' | 'cart' | 'tracking' | 'admin' | 'kds' | 'pos' | 'employee-orders' | 'history';
 
 export default function App() {
   const [view, setView] = useState<View>('home');
@@ -48,13 +50,13 @@ export default function App() {
     const tableIdParam = params.get('table');
     if (tableIdParam) {
       setTableId(tableIdParam);
-      setView('menu');
+      navigate('menu');
     }
     
     // Auth loaded by store already, but can read here if needed
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '') as View;
-      if (['home', 'menu', 'cart', 'tracking', 'admin', 'kds', 'pos', 'employee-orders'].includes(hash)) {
+      if (['home', 'menu', 'cart', 'tracking', 'admin', 'kds', 'pos', 'employee-orders', 'history'].includes(hash)) {
         setView(hash);
       }
     };
@@ -161,6 +163,10 @@ export default function App() {
             <NavButton active={view === 'home'} onClick={() => navigate('home')} icon={<HomeIcon size={18} />} label="Home" />
             <NavButton active={view === 'menu'} onClick={() => navigate('menu')} icon={<UtensilsCrossed size={18} />} label="Menu" />
             
+            {user && (
+              <NavButton active={view === 'history'} onClick={() => navigate('history')} icon={<History size={18} />} label="History" />
+            )}
+
             {(user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'EMPLOYEE') && (
               <>
                 <NavButton active={view === 'kds'} onClick={() => navigate('kds')} icon={<ClipboardList size={18} />} label="KDS" />
@@ -171,7 +177,7 @@ export default function App() {
               <NavButton active={view === 'admin'} onClick={() => navigate('admin')} icon={<LayoutDashboard size={18} />} label="Admin" />
             )}
             {user?.role === 'EMPLOYEE' && (
-              <NavButton active={view === 'employee-orders'} onClick={() => navigate('employee-orders')} icon={<ClipboardList size={18} />} label="My Orders" />
+              <NavButton active={view === 'employee-orders'} onClick={() => navigate('employee-orders')} icon={<ClipboardList size={18} />} label="My Jobs" />
             )}
           </nav>
           
@@ -325,6 +331,7 @@ export default function App() {
           {view === 'menu' && <CustomerMenu />}
           {view === 'cart' && <CartPage onCheckout={(orderId) => { setActiveOrderId(orderId); navigate('tracking'); }} />}
           {view === 'tracking' && <OrderTracking orderId={activeOrderId || ''} />}
+          {view === 'history' && <OrderHistory onSelectOrder={(id) => { setActiveOrderId(id); navigate('tracking'); }} />}
           {view === 'admin' && <AdminDashboard />}
           {view === 'kds' && <KDS />}
           {view === 'pos' && <POS />}

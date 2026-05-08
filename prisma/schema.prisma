@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id             String         @id @default(uuid())
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   email          String         @unique
   role           String         @default("EMPLOYEE")
@@ -22,8 +22,8 @@ model User {
 }
 
 model RefreshToken {
-  id          String   @id @default(uuid())
-  userId      String
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
   hashedToken String
   expiresAt   DateTime
   revoked     Boolean  @default(false)
@@ -31,7 +31,7 @@ model RefreshToken {
 }
 
 model Category {
-  id          String     @id @default(uuid())
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String?
   isActive    Boolean    @default(true)
@@ -39,8 +39,8 @@ model Category {
 }
 
 model MenuItem {
-  id              String      @id @default(uuid())
-  categoryId      String
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  categoryId      String      @db.ObjectId
   name            String
   description     String?
   imageUrl        String?
@@ -54,7 +54,7 @@ model MenuItem {
 }
 
 model RestaurantTable {
-  id       String  @id @default(uuid())
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
   name     String
   capacity Int
   status   String  @default("FREE")
@@ -62,10 +62,10 @@ model RestaurantTable {
 }
 
 model Order {
-  id            String   @id @default(uuid())
-  tableId       String?
-  userId        String?
-  employeeId    String?
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  tableId       String?  @db.ObjectId
+  userId        String?  @db.ObjectId
+  employeeId    String?  @db.ObjectId
   status        String   @default("PENDING")
   orderType     String   @default("DINEIN")
   totalAmount   Float    @default(0)
@@ -81,9 +81,9 @@ model Order {
 }
 
 model OrderItem {
-  id         String  @id @default(uuid())
-  orderId    String
-  menuItemId String
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderId    String  @db.ObjectId
+  menuItemId String  @db.ObjectId
   quantity   Int
   unitPrice  Float
   modifiers  String? // Stored as JSON string
@@ -93,8 +93,8 @@ model OrderItem {
 }
 
 model Payment {
-  id             String   @id @default(uuid())
-  orderId        String
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId        String   @db.ObjectId
   amount         Float
   method         String
   transactionRef String?
@@ -105,7 +105,7 @@ model Payment {
 }
 
 model Ingredient {
-  id             String          @id @default(uuid())
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
   name           String
   stockQty       Float           @default(0)
   unit           String
@@ -116,9 +116,9 @@ model Ingredient {
 }
 
 model RecipeBOM {
-  id               String @id @default(uuid())
-  menuItemId       String
-  ingredientId     String
+  id               String @id @default(auto()) @map("_id") @db.ObjectId
+  menuItemId       String @db.ObjectId
+  ingredientId     String @db.ObjectId
   quantityRequired Float
 
   menuItem   MenuItem   @relation(fields: [menuItemId], references: [id])
@@ -126,8 +126,8 @@ model RecipeBOM {
 }
 
 model StockMovement {
-  id           String   @id @default(uuid())
-  ingredientId String
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  ingredientId String   @db.ObjectId
   changeQty    Float
   reason       String
   referenceId  String?

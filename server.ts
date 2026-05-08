@@ -34,6 +34,12 @@ async function startServer() {
     });
   });
 
+  // Pass io to routes
+  app.use((req: any, res: any, next: any) => {
+    req.io = io;
+    next();
+  });
+
   // Mount modular backend logic
   app.use('/api', apiRouter);
 
