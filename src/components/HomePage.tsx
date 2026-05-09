@@ -1,6 +1,92 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Utensils, Clock, Star, ArrowRight, ChefHat, MapPin, Phone, Sparkles } from 'lucide-react';
+import { Utensils, Clock, Star, ArrowRight, ChefHat, MapPin, Phone, Sparkles, Loader2 } from 'lucide-react';
+
+function SplineBackground() {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadSpline = async () => {
+      try {
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = 'https://unpkg.com/@splinetool/viewer@1.9.42/build/spline-viewer.js';
+
+        script.onload = () => {
+          if (mounted) {
+            setLoaded(true);
+          }
+        };
+
+        script.onerror = () => {
+          if (mounted) {
+            setError(true);
+          }
+        };
+
+        document.head.appendChild(script);
+
+        const timeout = setTimeout(() => {
+          if (mounted && !loaded) {
+            setError(true);
+          }
+        }, 10000);
+
+        return () => {
+          clearTimeout(timeout);
+        };
+      } catch {
+        if (mounted) setError(true);
+      }
+    };
+
+    loadSpline();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-orange-900/20 to-gray-900">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-yellow-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-1/4 left-1/2 w-72 h-72 bg-orange-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="absolute inset-0" ref={containerRef}>
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 size={48} className="text-orange-500 animate-spin" />
+            <p className="text-white/50 font-bold">Loading 3D Experience...</p>
+          </div>
+        </div>
+      )}
+      <spline-viewer
+        url="https://prod.spline.design/3db69b6b-1c92-469b-80e9-33e60ff7c2ee/scene.splinecode"
+        style={{
+          width: '100%',
+          height: '100%',
+          opacity: loaded ? 1 : 0,
+          transition: 'opacity 0.5s ease'
+        }}
+        events-target="global"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50 pointer-events-none" />
+    </div>
+  );
+}
 
 export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
   return (
@@ -8,16 +94,10 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
       {/* Hero Section with 3D Spline Background */}
       <section className="relative h-[85vh] min-h-[650px] flex items-center justify-center overflow-hidden rounded-[3rem]">
         {/* Spline 3D Background */}
-        <div className="absolute inset-0 z-0">
-          <spline-viewer
-            url="https://prod.spline.design/3db69b6b-1c92-469b-80e9-33e60ff7c2ee/scene.splinecode"
-            style={{ width: '100%', height: '100%', background: 'transparent' }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/60" />
-        </div>
+        <SplineBackground />
 
         {/* Floating Particles Effect */}
-        <div className="absolute inset-0 z-5 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 z-[5] overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-orange-500 rounded-full animate-pulse opacity-60" />
           <div className="absolute top-1/3 right-1/4 w-3 h-3 bg-yellow-500 rounded-full animate-ping opacity-40" />
           <div className="absolute bottom-1/3 left-1/3 w-2 h-2 bg-white rounded-full animate-pulse opacity-30" />
@@ -89,6 +169,7 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={onOrderNow}
                 className="w-full sm:w-auto bg-white/10 backdrop-blur-xl text-white border-2 border-white/30 px-12 py-6 rounded-3xl text-xl font-black hover:bg-white/20 hover:border-white/50 transition-all flex items-center justify-center gap-3"
               >
                 <ChefHat size={24} />
