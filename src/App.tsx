@@ -525,21 +525,22 @@ export default function App() {
         {isMobile && (
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-3 pb-5 z-50 shadow-lg">
             {NAV_ITEMS.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => navigate(item.id as View)}
-                className={`flex flex-col items-center gap-1 px-4 py-1 ${
-                  view === item.id ? 'text-orange-500' : 'text-gray-400'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="text-xs font-bold">{item.label}</span>
+              <div key={item.id} className="relative">
+                <button
+                  onClick={() => navigate(item.id as View)}
+                  className={`flex flex-col items-center gap-1 px-4 py-1 ${
+                    view === item.id ? 'text-orange-500' : 'text-gray-400'
+                  }`}
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-xs font-bold">{item.label}</span>
+                </button>
                 {item.id === 'cart' && items.length > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
                     {items.length}
                   </span>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         )}

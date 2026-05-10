@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useCartStore } from '../store/useCartStore';
 
 const CATEGORIES = [
   { id: 'all', icon: '🍽', label: 'All' },
@@ -85,7 +86,7 @@ export default function FoodZoneMenu() {
   const [activeCatHome, setActiveCatHome] = useState('all');
   const [activeCatMenu, setActiveCatMenu] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { items: cartItems, addItem: addToCartGlobal, updateQuantity: updateQtyGlobal, removeItem: removeFromCartGlobal, clearCart: clearCartGlobal } = useCartStore();
   const [liked, setLiked] = useState<Set<string>>(new Set());
   const [currentItem, setCurrentItem] = useState<MenuItem | null>(null);
   const [currentQty, setCurrentQty] = useState(1);
@@ -134,24 +135,12 @@ export default function FoodZoneMenu() {
   };
 
   const addToCart = (item: MenuItem, qty = 1, sides: { name: string; price: number }[] = []) => {
-    setCart(prev => {
-      const existing = prev.find(c => c._id === item._id);
-      if (existing) {
-        return prev.map(c => 
-          c._id === item._id 
-            ? { ...c, qty: c.qty + qty, selectedSides: [...c.selectedSides, ...sides] }
-            : c
-        );
-      }
-      return [...prev, { ...item, qty, selectedSides: sides }];
+    addToCartGlobal({
+      id: item._id,
+      name: item.name,
+      price: item.price,
+      quantity: qty
     });
-    updateBadge();
-  };
-
-  const updateBadge = () => {
-    const count = cart.reduce((s, c) => s + c.qty, 0);
-    const badge = document.getElementById('foodzone-cart-badge');
-    if (badge) badge.textContent = count.toString();
   };
 
   const filteredHomeItems = items.filter(i =>
@@ -179,20 +168,18 @@ export default function FoodZoneMenu() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tableNumber,
-          items: cart.map(i => ({
-            menuItemId: i._id,
-            quantity: i.qty,
-            selectedSides: i.selectedSides,
+          items: cartItems.map(i => ({
+            menuItemId: i.menuItemId,
+            quantity: i.quantity,
             price: i.price
           })),
-          totalAmount: cart.reduce((s, i) => s + i.price * i.qty, 0) + 25 - 15
+          totalAmount: cartItems.reduce((s, i) => s + i.price * i.quantity, 0) + 25 - 15
         })
       });
       const data = await res.json();
       if (data.success) {
         showToast('Order placed! 🎉');
-        setCart([]);
-        updateBadge();
+        clearCartGlobal();
         setTimeout(() => setView('home'), 2000);
       } else {
         showToast('Failed: ' + data.message);
@@ -262,9 +249,9 @@ export default function FoodZoneMenu() {
               <button style={{ width: 44, height: 44, borderRadius: '50%', background: COLORS.lightGray, border: 'none', fontSize: 20, cursor: 'pointer' }}>🔔</button>
               <button onClick={() => setView('cart')} style={{ width: 44, height: 44, borderRadius: '50%', background: COLORS.red, border: 'none', fontSize: 18, cursor: 'pointer', color: COLORS.white, position: 'relative' }}>
                 🛒
-                {cart.reduce((s, c) => s + c.qty, 0) > 0 && (
+                {cartItems.reduce((s, c) => s + c.quantity, 0) > 0 && (
                   <span style={{ position: 'absolute', top: -4, right: -4, background: COLORS.dark, color: COLORS.white, borderRadius: 10, padding: '2px 6px', fontSize: 10, fontWeight: 700 }}>
-                    {cart.reduce((s, c) => s + c.qty, 0)}
+                    {cartItems.reduce((s, c) => s + c.quantity, 0)}
                   </span>
                 )}
               </button>
@@ -391,7 +378,7 @@ export default function FoodZoneMenu() {
                 position: 'relative'
               }}
             >
-              🛒 Cart ({cart.reduce((s, c) => s + c.qty, 0)})
+              🛒 Cart ({cartItems.reduce((s, c) => s + c.quantity, 0)})
             </button>
           </div>
           <div style={{ margin: `0 0 16px`, position: 'relative' }}>
@@ -591,34 +578,33 @@ export default function FoodZoneMenu() {
             <button onClick={() => setView('home')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' }}>← Back to Menu</button>
             <span style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: COLORS.dark }}>My Cart</span>
             <span style={{ fontSize: 13, color: COLORS.gray, background: COLORS.lightGray, padding: '6px 12px', borderRadius: 20, fontWeight: 600 }}>
-              {cart.reduce((s, c) => s + c.qty, 0)} items
+              {cartItems.reduce((s, c) => s + c.quantity, 0)} items
             </span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 400px', gap: 24 }}>
             <div style={{ maxHeight: isMobile ? 400 : 500, overflowY: 'auto' }}>
-              {cart.length === 0 ? (
+              {cartItems.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', color: COLORS.gray }}>
                   <div style={{ fontSize: 48, marginBottom: 12 }}>🛒</div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>Cart is empty</div>
                   <button onClick={() => setView('menu')} style={{ marginTop: 16, background: COLORS.red, color: COLORS.white, border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Browse Menu</button>
                 </div>
               ) : (
-                cart.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: 16, padding: '16px 0', borderBottom: `1px solid ${COLORS.border}`, alignItems: 'center' }}>
-                    <div style={{ width: isMobile ? 60 : 80, height: isMobile ? 60 : 80, borderRadius: 12, background: COLORS.lightGray, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 26 : 32, flexShrink: 0 }}>{item.emoji}</div>
+                cartItems.map((item) => (
+                  <div key={item.menuItemId} style={{ display: 'flex', gap: 16, padding: '16px 0', borderBottom: `1px solid ${COLORS.border}`, alignItems: 'center' }}>
+                    <div style={{ width: isMobile ? 60 : 80, height: isMobile ? 60 : 80, borderRadius: 12, background: COLORS.lightGray, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: isMobile ? 26 : 32, flexShrink: 0 }}>🍽️</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: isMobile ? 13 : 15, fontWeight: 700, color: COLORS.dark }}>{item.name}</div>
-                      {item.selectedSides.length > 0 && <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 2 }}>+ {item.selectedSides.map(s => s.name).join(', ')}</div>}
-                      <div style={{ fontSize: isMobile ? 14 : 16, fontWeight: 800, color: COLORS.red, marginTop: 6 }}>₹{item.price * item.qty}</div>
+                      <div style={{ fontSize: isMobile ? 14 : 16, fontWeight: 800, color: COLORS.red, marginTop: 6 }}>₹{item.price * item.quantity}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <button 
-                        onClick={() => setCart(prev => prev.map((c, i) => i === idx ? { ...c, qty: Math.max(1, c.qty - 1) } : c))}
+                        onClick={() => updateQtyGlobal(item.menuItemId, item.quantity - 1)}
                         style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${COLORS.border}`, background: COLORS.white, cursor: 'pointer', fontSize: 16, fontWeight: 700 }}
                       >−</button>
-                      <span style={{ fontSize: 14, fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{item.qty}</span>
+                      <span style={{ fontSize: 14, fontWeight: 700, minWidth: 20, textAlign: 'center' }}>{item.quantity}</span>
                       <button 
-                        onClick={() => setCart(prev => prev.map((c, i) => i === idx ? { ...c, qty: c.qty + 1 } : c))}
+                        onClick={() => updateQtyGlobal(item.menuItemId, item.quantity + 1)}
                         style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${COLORS.border}`, background: COLORS.white, cursor: 'pointer', fontSize: 16, fontWeight: 700 }}
                       >+</button>
                     </div>
@@ -626,10 +612,10 @@ export default function FoodZoneMenu() {
                 ))
               )}
             </div>
-            {cart.length > 0 && (
+            {cartItems.length > 0 && (
               <div style={{ background: COLORS.lightGray, borderRadius: 16, padding: isMobile ? 16 : 24, height: 'fit-content' }}>
                 {[
-                  { label: 'Subtotal', val: `₹${cart.reduce((s, i) => s + i.price * i.qty, 0)}` },
+                  { label: 'Subtotal', val: `₹${cartItems.reduce((s, i) => s + i.price * i.quantity, 0)}` },
                   { label: 'Delivery', val: '₹25' },
                   { label: 'Discount', val: '-₹15', color: COLORS.green }
                 ].map(row => (
@@ -640,7 +626,7 @@ export default function FoodZoneMenu() {
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: `1px solid ${COLORS.border}` }}>
                   <span style={{ fontSize: isMobile ? 15 : 18, fontWeight: 800, color: COLORS.dark }}>Total</span>
-                  <span style={{ fontSize: isMobile ? 15 : 18, fontWeight: 800, color: COLORS.red }}>₹{cart.reduce((s, i) => s + i.price * i.qty, 0) + 25 - 15}</span>
+                  <span style={{ fontSize: isMobile ? 15 : 18, fontWeight: 800, color: COLORS.red }}>₹{cartItems.reduce((s, i) => s + i.price * i.quantity, 0) + 25 - 15}</span>
                 </div>
                 <button 
                   onClick={handleCheckout}
@@ -665,14 +651,14 @@ export default function FoodZoneMenu() {
           ].map(tab => (
             <button 
               key={tab.id} 
-              onClick={() => tab.id === 'profile' ? showToast('Profile coming soon!') : setView(tab.id as any)}
+              onClick={() => setView(tab.id as any)}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', position: 'relative' }}
             >
               <span style={{ fontSize: 20, color: view === tab.id ? COLORS.red : COLORS.gray }}>{tab.icon}</span>
               <span style={{ fontSize: 10, fontWeight: 500, color: view === tab.id ? COLORS.red : COLORS.gray }}>{tab.label}</span>
-              {tab.id === 'cart' && cart.reduce((s, c) => s + c.qty, 0) > 0 && (
+              {tab.id === 'cart' && cartItems.reduce((s, c) => s + c.quantity, 0) > 0 && (
                 <span style={{ position: 'absolute', top: -2, right: 16, background: COLORS.red, color: COLORS.white, borderRadius: 10, padding: '1px 6px', fontSize: 9, fontWeight: 700 }}>
-                  {cart.reduce((s, c) => s + c.qty, 0)}
+                  {cartItems.reduce((s, c) => s + c.quantity, 0)}
                 </span>
               )}
             </button>
