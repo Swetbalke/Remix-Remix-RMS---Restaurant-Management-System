@@ -80,8 +80,13 @@ const priceStyle: React.CSSProperties = {
   color: COLORS.red,
 };
 
-export default function FoodZoneMenu() {
-  const [view, setView] = useState<'home' | 'menu' | 'detail' | 'cart'>('home');
+interface FoodZoneMenuProps {
+  initialView?: 'home' | 'menu' | 'detail' | 'cart';
+  onNavigate?: (view: 'home' | 'menu' | 'detail' | 'cart') => void;
+}
+
+export default function FoodZoneMenu({ initialView = 'home', onNavigate }: FoodZoneMenuProps) {
+  const [view, setView] = useState<'home' | 'menu' | 'detail' | 'cart'>(initialView);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [activeCatHome, setActiveCatHome] = useState('all');
   const [activeCatMenu, setActiveCatMenu] = useState('all');
