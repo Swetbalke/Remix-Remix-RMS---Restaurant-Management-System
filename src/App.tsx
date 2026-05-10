@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import HomePage from './components/HomePage';
 import CustomerMenu from './components/CustomerMenu';
+import FoodZoneMenu from './components/FoodZoneMenu';
 import CartPage from './components/CartPage';
 import OrderTracking from './components/OrderTracking';
 import AdminDashboard from './components/AdminDashboard';
@@ -408,7 +409,7 @@ export default function App() {
         <main className="max-w-7xl mx-auto py-8 px-6">
           <AnimatePresence mode="wait">
             {view === 'home' && <HomePage onOrderNow={() => navigate('menu')} />}
-            {view === 'menu' && <CustomerMenu />}
+            {view === 'menu' && <FoodZoneMenu />}
             {view === 'cart' && <CartPage onCheckout={(orderId) => { setActiveOrderId(orderId); navigate('tracking'); }} />}
             {view === 'tracking' && <OrderTracking orderId={activeOrderId || ''} />}
             {view === 'history' && <OrderHistory onSelectOrder={(id) => { setActiveOrderId(id); navigate('tracking'); }} />}

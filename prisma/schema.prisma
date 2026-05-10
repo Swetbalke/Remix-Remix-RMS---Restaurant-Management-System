@@ -34,6 +34,7 @@ model Category {
   id          String     @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String?
+  emoji       String?    @default("🍽")
   isActive    Boolean    @default(true)
   MenuItems   MenuItem[]
 }
@@ -48,6 +49,14 @@ model MenuItem {
   isAvailable     Boolean     @default(true)
   isVeg           Boolean     @default(true)
   preparationTime Int? // in minutes
+  // FoodZone additional fields
+  emoji           String?     @default("🍽")
+  tag             String?
+  rating          Float?      @default(4.0)
+  reviewCount     Int?        @default(0)
+  prepTime        String?     @default("20 mins")
+  nutrition       Json?       // [{value: String, label: String}]
+  sideOptions     Json?       // [{sideId: Int, emoji: String, name: String, price: Float}]
   category        Category    @relation(fields: [categoryId], references: [id])
   OrderItems      OrderItem[]
   RecipeBOM       RecipeBOM[]

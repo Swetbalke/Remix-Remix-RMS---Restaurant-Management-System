@@ -10,6 +10,7 @@ import { kitchenRouter } from './modules/kitchen/kitchen.routes';
 import { inventoryRouter } from './modules/inventory/inventory.routes';
 import { reportsRouter } from './modules/reports/reports.routes';
 import { aiRouter } from './modules/ai/ai.routes';
+import { customerRouter } from './modules/customer/customer.routes';
 
 const app = express.Router();
 
@@ -24,6 +25,9 @@ app.use('/kitchen', kitchenRouter);
 app.use('/inventory', inventoryRouter);
 app.use('/analytics', reportsRouter);
 app.use('/ai', aiRouter);
+
+// Customer-facing FoodZone routes
+app.use('/', customerRouter);
 
 // Error handler middleware
 app.use((err: any, req: any, res: any, next: any) => {

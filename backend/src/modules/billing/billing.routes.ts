@@ -35,21 +35,27 @@ router.get('/:id/bill', asyncHandler(async (req: any, res: any) => {
 
 router.post('/:id/pay', asyncHandler(async (req: any, res: any) => {
   const { amount, method, transactionRef } = req.body;
-  const payment = await prisma.payment.create({
-    data: {
-      orderId: req.params.id,
-      amount,
-      method,
-      transactionRef
-    }
-  });
+  
+  try {
+    const payment = await prisma.payment.create({
+      data: {
+        order: { connect: { id: req.params.id } },
+        amount: Number(amount),
+        method,
+        transactionRef
+      }
+    });
 
-  const order = await prisma.order.update({
-    where: { id: req.params.id },
-    data: { paymentStatus: 'PAID' }
-  });
+    const order = await prisma.order.update({
+      where: { id: req.params.id },
+      data: { paymentStatus: 'PAID' }
+    });
 
-  res.json({ payment, order });
+    res.json({ payment, order });
+  } catch (err: any) {
+    console.error("Payment Error:", err);
+    res.status(500).json({ error: 'Failed to process payment record' });
+  }
 }));
 
 export const billingRouter = router;

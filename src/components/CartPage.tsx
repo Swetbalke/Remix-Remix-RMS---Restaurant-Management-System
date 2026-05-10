@@ -63,23 +63,28 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
         })
       });
 
-      if (!res.ok) throw new Error('Failed to create order');
-      const order = await res.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create order');
+      const order = data;
       
       // If simulated payment is UPI or Card, log that payment is marked PAID logically 
       if (paymentMethod === 'UPI' || paymentMethod === 'CARD') {
-        await fetch(`/api/billing/${order.id}/pay`, {
+        const payRes = await fetch(`/api/billing/${order.id}/pay`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ amount: total, method: paymentMethod, transactionRef: 'SIMULATED_TXN' })
         });
+        if (!payRes.ok) {
+          const payData = await payRes.json();
+          throw new Error(payData.error || 'Payment failed');
+        }
       }
 
       clearCart();
       onCheckout(order.id);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      toast.error('Failed to checkout. Please try again.');
+      toast.error(err.message || 'Failed to checkout. Please try again.');
     } finally {
       setLoading(false);
     }

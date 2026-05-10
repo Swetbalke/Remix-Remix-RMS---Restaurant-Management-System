@@ -8,61 +8,74 @@ router.post('/', asyncHandler(async (req: any, res: any) => {
   const { tableId, userId, items, total, paymentMethod } = req.body;
   
   let tableConnect;
-  if (tableId) {
-    const tableExists = await prisma.restaurantTable.findUnique({ where: { id: tableId }});
-    if (tableExists) tableConnect = { connect: { id: tableId } };
+  if (tableId && tableId.length === 24) {
+    try {
+      const tableExists = await prisma.restaurantTable.findUnique({ where: { id: tableId }});
+      if (tableExists) tableConnect = { connect: { id: tableId } };
+    } catch (e) {
+      console.warn("Invalid tableId format ignored:", tableId);
+    }
   }
 
   let userConnect;
-  if (userId) {
-    const userExists = await prisma.user.findUnique({ where: { id: userId }});
-    if (userExists) userConnect = { connect: { id: userId } };
+  if (userId && userId.length === 24) {
+    try {
+      const userExists = await prisma.user.findUnique({ where: { id: userId }});
+      if (userExists) userConnect = { connect: { id: userId } };
+    } catch (e) {
+      console.warn("Invalid userId format ignored:", userId);
+    }
   }
 
-  const validItems = items.filter((item: any) => item.menuItemId || item.id);
+  const validItems = Array.isArray(items) ? items.filter((item: any) => (item.menuItemId || item.id)) : [];
   if (validItems.length === 0) {
     return res.status(400).json({ error: 'No valid items provided' });
   }
 
-  const order = await prisma.order.create({
-    data: {
-      totalAmount: Number(total) || 0,
-      status: 'PENDING',
-      paymentStatus: 'UNPAID',
-      table: tableConnect,
-      user: userConnect,
-      OrderItems: {
-        create: validItems.map((item: any) => ({
-          menuItemId: String(item.menuItemId || item.id),
-          quantity: Number(item.quantity) || 1,
-          unitPrice: Number(item.price || item.unitPrice || 0)
-        }))
+  try {
+    const order = await prisma.order.create({
+      data: {
+        totalAmount: Number(total) || 0,
+        status: 'PENDING',
+        paymentStatus: 'UNPAID',
+        table: tableConnect,
+        user: userConnect,
+        OrderItems: {
+          create: validItems.map((item: any) => ({
+            menuItem: { connect: { id: String(item.menuItemId || item.id) } },
+            quantity: Number(item.quantity) || 1,
+            unitPrice: Number(item.price || item.unitPrice || 0)
+          }))
+        }
+      },
+      include: { 
+        OrderItems: { include: { menuItem: true } }, 
+        table: true 
       }
-    },
-    include: { 
-      OrderItems: { include: { menuItem: true } }, 
-      table: true 
+    });
+
+    const formattedOrder = {
+      ...order,
+      status: order.status.toLowerCase(),
+      paymentStatus: order.paymentStatus.toLowerCase(),
+      tableNumber: order.table?.name || 'Takeaway',
+      items: order.OrderItems.map(oi => ({
+        ...oi,
+        name: oi.menuItem.name,
+        price: oi.unitPrice
+      }))
+    };
+    
+    // Emit socket event for real-time updates
+    if (req.io) {
+      req.io.emit('new-order', formattedOrder);
     }
-  });
 
-  const formattedOrder = {
-    ...order,
-    status: order.status.toLowerCase(),
-    paymentStatus: order.paymentStatus.toLowerCase(),
-    tableNumber: order.table?.name || 'Takeaway',
-    items: order.OrderItems.map(oi => ({
-      ...oi,
-      name: oi.menuItem.name,
-      price: oi.unitPrice
-    }))
-  };
-  
-  // Emit socket event for real-time updates
-  if (req.io) {
-    req.io.emit('new-order', formattedOrder);
+    res.status(201).json(formattedOrder);
+  } catch (err: any) {
+    console.error("Order Creation Error:", err);
+    res.status(500).json({ error: 'Failed to create order in database. Ensure all items exist.' });
   }
-
-  res.status(201).json(formattedOrder);
 }));
 
 router.get('/', asyncHandler(async (req: any, res: any) => {

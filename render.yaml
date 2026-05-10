@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: rms-enterprise
+    region: oregon
+    env: node
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URL
+        value: mongodb+srv://swetbalke2005_db_user:8clJNCSNGRVviNK3@cluster0.sowtcqz.mongodb.net/rms_database?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: rms-enterprise-secret-key-prod-2024
+      - key: GEMINI_API_KEY
+        value: MY_GEMINI_API_KEY
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_placeholder
+      - key: RAZORPAY_KEY_SECRET
+        value: placeholder_secret
