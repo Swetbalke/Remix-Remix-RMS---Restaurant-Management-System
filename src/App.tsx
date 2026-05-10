@@ -12,7 +12,11 @@ import {
   Monitor,
   History,
   AlertCircle,
-  Loader2
+  Loader2,
+  MapPin,
+  Mail,
+  Shield,
+  UserCog
 } from 'lucide-react';
 import HomePage from './components/HomePage';
 import CustomerMenu from './components/CustomerMenu';
@@ -32,7 +36,23 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase';
 
-type View = 'home' | 'menu' | 'cart' | 'tracking' | 'admin' | 'kds' | 'pos' | 'employee-orders' | 'history';
+type View = 'home' | 'menu' | 'cart' | 'tracking' | 'admin' | 'kds' | 'pos' | 'employee-orders' | 'history' | 'profile';
+
+type ViewName = 'home' | 'menu' | 'cart' | 'history' | 'profile' | 'kds' | 'pos' | 'admin' | 'employee-orders';
+
+const NAV_ITEMS: { id: ViewName; label: string; icon: React.ReactNode }[] = [
+  { id: 'home', label: 'Home', icon: <HomeIcon size={18} /> },
+  { id: 'menu', label: 'Menu', icon: <UtensilsCrossed size={18} /> },
+  { id: 'cart', label: 'My Cart', icon: <ShoppingCart size={18} /> },
+  { id: 'history', label: 'History', icon: <History size={18} /> },
+  { id: 'profile', label: 'Profile', icon: <UserIcon size={18} /> },
+];
+
+const ADMIN_NAV_ITEMS: { id: ViewName; label: string; icon: React.ReactNode }[] = [
+  { id: 'kds', label: 'KDS', icon: <ClipboardList size={18} /> },
+  { id: 'pos', label: 'POS', icon: <Monitor size={18} /> },
+  { id: 'admin', label: 'Admin', icon: <LayoutDashboard size={18} /> },
+];
 
 const VALIDATE_EMAIL = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -57,6 +77,14 @@ export default function App() {
   const [name, setName] = useState('');
   const [formErrors, setFormErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     socketService.connect();
@@ -70,7 +98,7 @@ export default function App() {
 
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '') as View;
-      if (['home', 'menu', 'cart', 'tracking', 'admin', 'kds', 'pos', 'employee-orders', 'history'].includes(hash)) {
+      if (['home', 'menu', 'cart', 'tracking', 'admin', 'kds', 'pos', 'employee-orders', 'history', 'profile'].includes(hash)) {
         setView(hash);
       }
     };
@@ -406,19 +434,115 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <main className="max-w-7xl mx-auto py-8 px-6">
+        <main className={`max-w-7xl mx-auto py-8 px-6 ${isMobile ? 'pb-24' : ''}`}>
+          {/* Admin Mobile Tabs */}
+          {isMobile && (user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'EMPLOYEE') && (
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              {ADMIN_NAV_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.id as View)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shrink-0 whitespace-nowrap ${
+                    view === item.id ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {item.icon} {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
             {view === 'home' && <HomePage onOrderNow={() => navigate('menu')} />}
             {view === 'menu' && <FoodZoneMenu />}
             {view === 'cart' && <CartPage onCheckout={(orderId) => { setActiveOrderId(orderId); navigate('tracking'); }} />}
             {view === 'tracking' && <OrderTracking orderId={activeOrderId || ''} />}
             {view === 'history' && <OrderHistory onSelectOrder={(id) => { setActiveOrderId(id); navigate('tracking'); }} />}
+            {view === 'profile' && (
+              <div className="max-w-md mx-auto">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-16 h-16 bg-orange-500 rounded-full flex items-center justify-center text-white text-2xl font-black">
+                      {user?.name?.charAt(0) || 'G'}
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-black text-gray-900">{user?.name || 'Guest User'}</h2>
+                      <p className="text-sm text-gray-500">{user?.email || 'guest@example.com'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                      <UserCog size={20} className="text-orange-500" />
+                      <div>
+                        <p className="text-xs text-gray-500 font-bold">User ID</p>
+                        <p className="text-sm font-black text-gray-900">{user?.uid || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+                      <Shield size={20} className="text-orange-500" />
+                      <div>
+                        <p className="text-xs text-gray-500 font-bold">Role</p>
+                        <p className="text-sm font-black text-gray-900">{user?.role || 'CUSTOMER'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {user ? (
+                    <button
+                      onClick={() => { logout(); navigate('home'); }}
+                      className="w-full mt-6 py-4 bg-red-500 text-white rounded-xl font-black flex items-center justify-center gap-2 hover:bg-red-600 transition-all"
+                    >
+                      <LogOut size={20} /> Logout
+                    </button>
+                  ) : (
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={() => setShowLogin(true)}
+                        className="flex-1 py-4 bg-orange-500 text-white rounded-xl font-black hover:bg-orange-600 transition-all"
+                      >
+                        Login
+                      </button>
+                      <button
+                        onClick={() => { setLoginMode('register'); setShowLogin(true); }}
+                        className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-black hover:bg-black transition-all"
+                      >
+                        Register
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             {view === 'admin' && <AdminDashboard />}
             {view === 'kds' && <KDS />}
             {view === 'pos' && <POS />}
             {view === 'employee-orders' && <EmployeeOrders />}
           </AnimatePresence>
         </main>
+
+        {/* Mobile Bottom Navigation */}
+        {isMobile && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-3 pb-5 z-50 shadow-lg">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => navigate(item.id as View)}
+                className={`flex flex-col items-center gap-1 px-4 py-1 ${
+                  view === item.id ? 'text-orange-500' : 'text-gray-400'
+                }`}
+              >
+                <span className="text-xl">{item.icon}</span>
+                <span className="text-xs font-bold">{item.label}</span>
+                {item.id === 'cart' && items.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                    {items.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </ErrorBoundary>
   );

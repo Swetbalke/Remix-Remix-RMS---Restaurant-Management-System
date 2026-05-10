@@ -236,7 +236,7 @@ export default function FoodZoneMenu() {
     ? { display: 'flex', gap: 12, overflowX: 'auto', padding: '0 20px 16px' }
     : { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20, padding: '0 40px 24px' };
 
-  const cardWidth = isMobile ? 155 : '100%';
+  const cardWidth = isMobile ? '100%' : '100%';
 
   return (
     <div style={containerStyle}>
@@ -339,7 +339,7 @@ export default function FoodZoneMenu() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderTop: `1px solid ${COLORS.border}` }}>
                     <span style={{ fontSize: 10, color: COLORS.gold }}>★ <span style={{ color: COLORS.gray, fontWeight: 600 }}>{item.rating}</span></span>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); addToCart(item, 1, []); showToast(`${item.name} added! 🛒`); }}
+                      onClick={(e) => { e.stopPropagation(); addToCart(item, 1, []); showToast(`${item.name} added!`); }}
                       style={{ background: COLORS.red, color: COLORS.white, border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                     >+ Add</button>
                   </div>
@@ -440,9 +440,9 @@ export default function FoodZoneMenu() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ ...priceStyle, fontSize: isMobile ? 15 : 18 }}>₹{item.price}</span>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); addToCart(item, 1, []); showToast(`${item.name} added! 🛒`); }}
+                        onClick={(e) => { e.stopPropagation(); addToCart(item, 1, []); showToast(`${item.name} added!`); }}
                         style={{ background: COLORS.red, color: COLORS.white, border: 'none', borderRadius: 10, padding: '8px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                      >+ Quick Add 🛒</button>
+                      >+ Quick Add</button>
                     </div>
                   </div>
                   <button 
