@@ -72,7 +72,7 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
         const payRes = await fetch(`/api/billing/${order.id}/pay`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: total, method: paymentMethod, transactionRef: 'SIMULATED_TXN' })
+          body: JSON.stringify({ amount: totalAmount, method: paymentMethod, transactionRef: 'SIMULATED_TXN' })
         });
         if (!payRes.ok) {
           const payData = await payRes.json();
@@ -216,7 +216,7 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
                 <Separator className="my-4" />
                 <div className="flex justify-between text-2xl font-black text-gray-900">
                   <span>Total</span>
-                  <span className="text-orange-600">₹{total.toFixed(2)}</span>
+                  <span className="text-orange-600">₹{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 

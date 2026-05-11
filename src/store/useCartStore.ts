@@ -1,5 +1,17 @@
 import { create } from 'zustand';
-import { MenuItem, OrderItem } from '../types';
+
+interface OrderItem {
+  menuItemId: string;
+  quantity: number;
+  price: number;
+  name: string;
+}
+
+interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+}
 
 interface CartState {
   items: OrderItem[];
