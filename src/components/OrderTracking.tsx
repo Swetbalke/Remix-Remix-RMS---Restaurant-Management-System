@@ -119,7 +119,7 @@ export default function OrderTracking({ orderId }: { orderId: string }) {
                 <div key={idx} className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <span className="w-6 h-6 bg-gray-50 rounded-lg flex items-center justify-center text-xs font-black text-gray-400">{item.quantity}x</span>
-                    <span className="font-bold text-gray-700">{item.name}</span>
+                    <span className="font-bold text-gray-700">{item.name || item.menuItem?.name || 'Item'}</span>
                   </div>
                   <span className="font-black text-gray-900">₹{item.price * item.quantity}</span>
                 </div>

@@ -24,6 +24,7 @@ import KDS from './components/KDS';
 import POS from './components/POS';
 import EmployeeOrders from './components/EmployeeOrders';
 import OrderHistory from './components/OrderHistory';
+import Profile from './components/Profile';
 import ErrorBoundary from './ErrorBoundary';
 import { socketService } from './services/socketService';
 import { useAuthStore } from './store/useAuthStore';
@@ -32,7 +33,11 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from './firebase';
 
-type View = 'home' | 'menu' | 'cart' | 'tracking' | 'admin' | 'kds' | 'pos' | 'employee-orders' | 'history';
+type View = 'home' | 'menu' | 'cart' | 'tracking' | 'admin' | 'kds' | 'pos' | 'employee-orders' | 'history' | 'profile';
+
+type ViewName = 'home' | 'menu' | 'cart' | 'history' | 'profile' | 'kds' | 'pos' | 'admin' | 'employee-orders';
+
+
 
 const VALIDATE_EMAIL = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,7 +75,7 @@ export default function App() {
 
     const handleHash = () => {
       const hash = window.location.hash.replace('#', '') as View;
-      if (['home', 'menu', 'cart', 'tracking', 'admin', 'kds', 'pos', 'employee-orders', 'history'].includes(hash)) {
+      if (['home', 'menu', 'cart', 'tracking', 'admin', 'kds', 'pos', 'employee-orders', 'history', 'profile'].includes(hash)) {
         setView(hash);
       }
     };
@@ -216,7 +221,10 @@ export default function App() {
               <NavButton active={view === 'menu'} onClick={() => navigate('menu')} icon={<UtensilsCrossed size={18} />} label="Menu" />
 
               {user && (
-                <NavButton active={view === 'history'} onClick={() => navigate('history')} icon={<History size={18} />} label="History" />
+                <>
+                  <NavButton active={view === 'history'} onClick={() => navigate('history')} icon={<History size={18} />} label="History" />
+                  <NavButton active={view === 'profile'} onClick={() => navigate('profile')} icon={<UserIcon size={18} />} label="Profile" />
+                </>
               )}
 
               {(user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'EMPLOYEE') && (
@@ -417,6 +425,7 @@ export default function App() {
             {view === 'kds' && <KDS />}
             {view === 'pos' && <POS />}
             {view === 'employee-orders' && <EmployeeOrders />}
+            {view === 'profile' && <Profile />}
           </AnimatePresence>
         </main>
       </div>

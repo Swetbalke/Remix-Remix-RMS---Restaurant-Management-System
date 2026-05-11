@@ -85,7 +85,7 @@ export default function EmployeeOrders() {
               <div className="flex gap-2 items-center">
                 {order.status === 'pending' && (
                   <button 
-                    onClick={() => updateStatus(order.id, 'confirmed')}
+                    onClick={() => updateStatus(order.id, 'preparing')}
                     className="px-6 py-3 bg-blue-500 text-white font-black text-sm rounded-xl hover:bg-blue-600 transition-all flex items-center gap-2"
                   >
                     <CheckCircle2 size={16} /> Accept Order

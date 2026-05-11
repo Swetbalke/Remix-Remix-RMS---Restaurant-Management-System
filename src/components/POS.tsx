@@ -190,7 +190,7 @@ export default function POS() {
                   >
                     {!item.available && <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center font-black text-red-500 uppercase text-xs">Sold Out</div>}
                     <div className="h-32 rounded-2xl overflow-hidden mb-3">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
+                      <img src={item.imageUrl || item.image || `https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=200&q=80`} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" referrerPolicy="no-referrer" />
                     </div>
                     <h4 className="font-black text-gray-900 line-clamp-1">{item.name}</h4>
                     <p className="text-orange-500 font-black text-sm">₹{item.price}</p>

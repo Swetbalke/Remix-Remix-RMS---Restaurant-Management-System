@@ -20,7 +20,7 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
   
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const tax = subtotal * 0.05;
-  const total = subtotal + tax;
+  const totalAmount = subtotal + tax;
 
   useEffect(() => {
     if (user) {
@@ -58,7 +58,7 @@ export default function CartPage({ onCheckout }: { onCheckout: (orderId: string)
           items: dbItems, 
           tableId,
           userId: user?.id,
-          total: total,
+          total: totalAmount,
           paymentMethod 
         })
       });
