@@ -12,7 +12,11 @@ import {
   Monitor,
   History,
   AlertCircle,
-  Loader2
+  Loader2,
+  MapPin,
+  Mail,
+  Shield,
+  UserCog
 } from 'lucide-react';
 import HomePage from './components/HomePage';
 import CustomerMenu from './components/CustomerMenu';
@@ -37,7 +41,19 @@ type View = 'home' | 'menu' | 'cart' | 'tracking' | 'admin' | 'kds' | 'pos' | 'e
 
 type ViewName = 'home' | 'menu' | 'cart' | 'history' | 'profile' | 'kds' | 'pos' | 'admin' | 'employee-orders';
 
+const NAV_ITEMS: { id: ViewName; label: string; icon: React.ReactNode }[] = [
+  { id: 'home', label: 'Home', icon: <HomeIcon size={18} /> },
+  { id: 'menu', label: 'Menu', icon: <UtensilsCrossed size={18} /> },
+  { id: 'cart', label: 'My Cart', icon: <ShoppingCart size={18} /> },
+  { id: 'history', label: 'History', icon: <History size={18} /> },
+  { id: 'profile', label: 'Profile', icon: <UserIcon size={18} /> },
+];
 
+const ADMIN_NAV_ITEMS: { id: ViewName; label: string; icon: React.ReactNode }[] = [
+  { id: 'kds', label: 'KDS', icon: <ClipboardList size={18} /> },
+  { id: 'pos', label: 'POS', icon: <Monitor size={18} /> },
+  { id: 'admin', label: 'Admin', icon: <LayoutDashboard size={18} /> },
+];
 
 const VALIDATE_EMAIL = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -62,6 +78,14 @@ export default function App() {
   const [name, setName] = useState('');
   const [formErrors, setFormErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     socketService.connect();
@@ -414,13 +438,37 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <main className="max-w-7xl mx-auto py-8 px-6">
+        <main className={`max-w-7xl mx-auto py-8 px-6 ${isMobile ? 'pb-24' : ''}`}>
+          {/* Admin Mobile Tabs */}
+          {isMobile && (user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'EMPLOYEE') && (
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+              {ADMIN_NAV_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => navigate(item.id as View)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black transition-all shrink-0 whitespace-nowrap ${
+                    view === item.id ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {item.icon} {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
-            {view === 'home' && <HomePage onOrderNow={() => navigate('menu')} />}
-            {view === 'menu' && <FoodZoneMenu />}
+            {view === 'home' && <FoodZoneMenu initialView="home" onNavigate={(v) => {
+              if (v === 'cart') navigate('cart');
+              else if (v === 'profile') navigate('profile');
+            }} />}
+            {view === 'menu' && <FoodZoneMenu initialView="menu" onNavigate={(v) => {
+              if (v === 'cart') navigate('cart');
+              else if (v === 'profile') navigate('profile');
+            }} />}
             {view === 'cart' && <CartPage onCheckout={(orderId) => { setActiveOrderId(orderId); navigate('tracking'); }} />}
             {view === 'tracking' && <OrderTracking orderId={activeOrderId || ''} />}
             {view === 'history' && <OrderHistory onSelectOrder={(id) => { setActiveOrderId(id); navigate('tracking'); }} />}
+            {view === 'profile' && <Profile />}
             {view === 'admin' && <AdminDashboard />}
             {view === 'kds' && <KDS />}
             {view === 'pos' && <POS />}
@@ -428,6 +476,30 @@ export default function App() {
             {view === 'profile' && <Profile />}
           </AnimatePresence>
         </main>
+
+        {/* Mobile Bottom Navigation */}
+        {isMobile && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-3 pb-5 z-50 shadow-lg">
+            {NAV_ITEMS.map((item) => (
+              <div key={item.id} className="relative">
+                <button
+                  onClick={() => navigate(item.id as View)}
+                  className={`flex flex-col items-center gap-1 px-4 py-1 ${
+                    view === item.id ? 'text-orange-500' : 'text-gray-400'
+                  }`}
+                >
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-xs font-bold">{item.label}</span>
+                </button>
+                {item.id === 'cart' && items.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                    {items.length}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </ErrorBoundary>
   );
