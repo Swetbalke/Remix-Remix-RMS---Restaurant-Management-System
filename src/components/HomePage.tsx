@@ -88,7 +88,7 @@ function SplineBackground() {
   );
 }
 
-export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
+export default function HomePage({ onOrderNow, onNavigate }: { onOrderNow: () => void, onNavigate?: (view: 'menu' | 'cart' | 'profile' | 'home') => void }) {
   return (
     <div className="space-y-20 pb-20">
       {/* Hero Section with 3D Spline Background */}
@@ -154,7 +154,7 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
               className="flex flex-col sm:flex-row items-center justify-center gap-6"
             >
               <motion.button
-                onClick={onOrderNow}
+                onClick={() => onNavigate ? onNavigate('menu') : onOrderNow()}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className="group relative w-full sm:w-auto bg-gradient-to-r from-orange-500 to-orange-600 text-white px-12 py-6 rounded-3xl text-xl font-black shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 transition-all overflow-hidden"
@@ -169,7 +169,7 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
               <motion.button
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={onOrderNow}
+                onClick={() => onNavigate ? onNavigate('menu') : onOrderNow()}
                 className="w-full sm:w-auto bg-white/10 backdrop-blur-xl text-white border-2 border-white/30 px-12 py-6 rounded-3xl text-xl font-black hover:bg-white/20 hover:border-white/50 transition-all flex items-center justify-center gap-3"
               >
                 <ChefHat size={24} />
@@ -220,7 +220,7 @@ export default function HomePage({ onOrderNow }: { onOrderNow: () => void }) {
             <p className="text-gray-500 font-bold mt-2">Handpicked by our executive chef</p>
           </div>
           <motion.button
-            onClick={onOrderNow}
+            onClick={() => onNavigate ? onNavigate('menu') : onOrderNow()}
             whileHover={{ x: 5 }}
             className="hidden md:flex items-center gap-2 text-orange-500 font-black hover:text-orange-600 transition-colors group"
           >

@@ -82,7 +82,7 @@ const priceStyle: React.CSSProperties = {
 
 interface FoodZoneMenuProps {
   initialView?: 'home' | 'menu' | 'detail' | 'cart';
-  onNavigate?: (view: 'home' | 'menu' | 'detail' | 'cart') => void;
+  onNavigate?: (view: 'home' | 'menu' | 'detail' | 'cart' | 'cart' | 'profile') => void;
 }
 
 export default function FoodZoneMenu({ initialView = 'home', onNavigate }: FoodZoneMenuProps) {
@@ -152,11 +152,9 @@ export default function FoodZoneMenu({ initialView = 'home', onNavigate }: FoodZ
     activeCatHome === 'all' || i.category === activeCatHome
   );
 
-  const filteredMenuItems = items.filter(i => {
-    const catOk = activeCatMenu === 'all' || i.category === activeCatMenu;
-    const searchOk = !searchQuery || i.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return catOk && searchOk;
-  });
+  const filteredMenuItems = items.filter(i =>
+    activeCatMenu === 'all' || i.category === activeCatMenu
+  );
 
   const openDetail = (item: MenuItem) => {
     setCurrentItem(item);
@@ -371,46 +369,7 @@ export default function FoodZoneMenu({ initialView = 'home', onNavigate }: FoodZ
       {/* MENU VIEW */}
       {view === 'menu' && (
         <div style={{ paddingBottom: isMobile ? 80 : 40, padding: isMobile ? '16px 20px' : '32px 40px 0' }}>
-          <div style={{ padding: '0 0 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: isMobile ? 18 : 24, fontWeight: 800, color: COLORS.dark, margin: 0 }}>
-              Choose Your Food <span style={{ color: COLORS.red }}>Today</span>
-            </h2>
-            <button 
-              onClick={() => setView('cart')} 
-              style={{ 
-                background: COLORS.red, color: COLORS.white, border: 'none', borderRadius: 12, 
-                padding: '10px 16px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-                position: 'relative'
-              }}
-            >
-              🛒 Cart ({cartItems.reduce((s, c) => s + c.quantity, 0)})
-            </button>
-          </div>
-          <div style={{ margin: `0 0 16px`, position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>🔍</span>
-            <input 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Find your favourite food" 
-              style={{ 
-                width: '100%', padding: '14px 16px 14px 42px', 
-                border: `1.5px solid ${COLORS.border}`, borderRadius: 12, 
-                fontSize: isMobile ? 13 : 15, fontFamily: 'inherit', background: COLORS.lightGray, outline: 'none' 
-              }} 
-            />
-          </div>
-          <div style={{ display: 'flex', gap: 8, padding: '0 0 16px', overflowX: 'auto' }}>
-            {CATEGORIES.map(cat => (
-              <button 
-                key={cat.id} 
-                onClick={() => { setActiveCatMenu(cat.id); fetchMenuItems(cat.id); }}
-                style={buttonStyles(activeCatMenu === cat.id)}
-              >
-                {cat.icon} {cat.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: isMobile ? 'block' : 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
             {filteredMenuItems.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 40, color: COLORS.gray, fontSize: 13 }}>No items found</div>
             ) : (
@@ -656,7 +615,12 @@ export default function FoodZoneMenu({ initialView = 'home', onNavigate }: FoodZ
           ].map(tab => (
             <button 
               key={tab.id} 
-              onClick={() => setView(tab.id as any)}
+              onClick={() => {
+                if (tab.id === 'home' && onNavigate) { onNavigate('home'); }
+                else if (tab.id === 'menu') { setView('menu'); }
+                else if (tab.id === 'cart' && onNavigate) { onNavigate('cart'); }
+                else if (tab.id === 'profile' && onNavigate) { onNavigate('profile'); }
+              }}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', position: 'relative' }}
             >
               <span style={{ fontSize: 20, color: view === tab.id ? COLORS.red : COLORS.gray }}>{tab.icon}</span>

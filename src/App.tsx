@@ -457,13 +457,11 @@ export default function App() {
           )}
 
           <AnimatePresence mode="wait">
-            {view === 'home' && <FoodZoneMenu initialView="home" onNavigate={(v) => {
-              if (v === 'cart') navigate('cart');
-              else if (v === 'profile') navigate('profile');
-            }} />}
+            {view === 'home' && <HomePage onNavigate={(v) => navigate(v)} />}
             {view === 'menu' && <FoodZoneMenu initialView="menu" onNavigate={(v) => {
               if (v === 'cart') navigate('cart');
               else if (v === 'profile') navigate('profile');
+              else if (v === 'home') navigate('home');
             }} />}
             {view === 'cart' && <CartPage onCheckout={(orderId) => { setActiveOrderId(orderId); navigate('tracking'); }} />}
             {view === 'tracking' && <OrderTracking orderId={activeOrderId || ''} />}
@@ -473,7 +471,6 @@ export default function App() {
             {view === 'kds' && <KDS />}
             {view === 'pos' && <POS />}
             {view === 'employee-orders' && <EmployeeOrders />}
-            {view === 'profile' && <Profile />}
           </AnimatePresence>
         </main>
 
